@@ -1,33 +1,48 @@
+import { useTheme } from '@/hooks/useTheme';
 import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+// import { ShoppingBag, User } from 'lucide-react-native';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const t = (light: string, dark: string) => (isDark ? dark : light);
 
   return (
+    // <AuthGate>
+    // {/* </AuthGate> */}
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        tabBarStyle: {
+          backgroundColor: t('#FFFFFF', '#1F2937'),
+          borderTopWidth: 1,
+          borderTopColor: t('#E5E7EB', '#374151'),
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        tabBarActiveTintColor: t('#2F80ED', '#60A5FA'),
+        tabBarInactiveTintColor: t('#9CA3AF', '#9CA3AF'),
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Minhas Listas',
+          // tabBarIcon: ({ size, color }) => (
+          //   <ShoppingBag size={size} color={color} />
+          // ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="profile"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Perfil',
+          // tabBarIcon: ({ size, color }) => <User size={size} color={color} />,
         }}
       />
     </Tabs>
