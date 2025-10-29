@@ -1,4 +1,5 @@
 
+import { AuthProvider } from '@/hooks/useAuth';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { ThemeProvider, useTheme } from '@/hooks/useTheme';
 import {
@@ -22,6 +23,7 @@ function LayoutContent() {
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
+        {/* <Stack.Screen name="login" options={{ headerShown: false }} /> */}
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
@@ -51,8 +53,10 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
-    <ThemeProvider>
-      <LayoutContent />
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider>
+        <LayoutContent />
+      </ThemeProvider>
+    </AuthProvider>
   );
 }

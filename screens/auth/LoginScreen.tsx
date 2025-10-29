@@ -1,9 +1,11 @@
-import api from '@/api/Axios';
 import PublicOnlyGate from '@/components/PublicOnlyGate';
+import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
 import { Eye, EyeOff, ShoppingBag } from 'lucide-react-native';
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import {
     ActivityIndicator,
     KeyboardAvoidingView,
@@ -15,29 +17,12 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { z } from 'zod';
 
-
-type credentials = {
-    email: string;
-    password: string;
-};
-
-type authResponse = {
-    message: string;
-    data: {
-        user: User;
-        token: string;
-    };
-};
-
-export type User = {
-    id: number;
-    name: string;
-    email: string;
-    email_verified_at: string | null;
-    created_at: string;
-    updated_at: string;
-};
+const schema = z.object({
+    email: z.string({ required_error: 'O e-mail é obrigatório!' }).email({ message: 'E-mail inválido!' }).nonempty('O e-mail é obrigatório!'),
+    password: z.string({ required_error: 'A senha é obrigatória!' }).min(8, { message: 'A senha deve conter no mínimo 8 caracteres!' }).nonempty('A senha é obrigatória!'),
+})
 
 export default function LoginScreen() {
     const { theme } = useTheme();
@@ -50,59 +35,62 @@ export default function LoginScreen() {
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
-    const login = async (data: credentials) => {
-        setIsLoading(true);
+    const { control, handleSubmit, formState: { errors } } = useForm({ resolver: zodResolver(schema) })
+    const { login, loading } = useAuth()
 
-        try {
-            const res = await api.post<authResponse>("/auth", data);
+    // const login = async (data: credentials) => {
+    //     setIsLoading(true);
 
-            const { token, user } = res.data.data;
+    //     try {
+    //         const res = await api.post<authResponse>("/auth", data);
 
-            if (!token || !user) {
-                throw new Error("Resposta inválida do servidor.");
-            }
+    //         const { token, user } = res.data.data;
 
-            api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-            setToken(token);
+    //         if (!token || !user) {
+    //             throw new Error("Resposta inválida do servidor.");
+    //         }
 
-            try {
-                await Promise.all([
-                    AsyncStorage.setItem("token", `Bearer ${token}`),
-                    AsyncStorage.setItem("user", JSON.stringify(user)),
-                ]);
-            } catch (error) {
-                alert("Não foi possível salvar os dados localmente.");
-                console.error("Erro ao salvar no AsyncStorage:", error);
-            }
+    //         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    //         setToken(token);
 
-            router.replace("/(tabs)");
-        } catch (error: any) {
-            console.error("Erro no login:", error);
-            alert(
-                "Erro ao fazer login. Verifique suas credenciais e tente novamente. " + { error }
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
+    //         try {
+    //             await Promise.all([
+    //                 AsyncStorage.setItem("token", `Bearer ${token}`),
+    //                 AsyncStorage.setItem("user", JSON.stringify(user)),
+    //             ]);
+    //         } catch (error) {
+    //             alert("Não foi possível salvar os dados localmente.");
+    //             console.error("Erro ao salvar no AsyncStorage:", error);
+    //         }
 
-    const handleLogin = async () => {
-        if (!email.trim() || !password.trim()) {
-            setError('Por favor, preencha todos os campos');
-            return;
-        }
+    //         router.replace("/(tabs)");
+    //     } catch (error: any) {
+    //         console.error("Erro no login:", error);
+    //         alert(
+    //             "Erro ao fazer login. Verifique suas credenciais e tente novamente. " + { error }
+    //         );
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
-        setIsLoading(true);
-        setError('');
+    // const handleLogin = async () => {
+    //     if (!email.trim() || !password.trim()) {
+    //         setError('Por favor, preencha todos os campos');
+    //         return;
+    //     }
 
-        try {
+    //     setIsLoading(true);
+    //     setError('');
 
-        } catch (error: any) {
-            setError(error.message || 'Erro ao fazer login. Por favor, tente novamente.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    //     try {
+
+    //     } catch (error: any) {
+    //         setError(error.message || 'Erro ao fazer login. Por favor, tente novamente.');
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // };
 
     return (
         <PublicOnlyGate>
@@ -122,10 +110,10 @@ export default function LoginScreen() {
                             <ShoppingBag size={40} color={t('#2F80ED', '#60A5FA')} />
                         </View>
                         <Text style={[styles.appTitle, { color: t('#1F2937', '#F9FAFB') }]}>
-                            TáNaLista
+                            HIdroVision
                         </Text>
                         <Text style={[styles.subtitle, { color: t('#6B7280', '#9CA3AF') }]}>
-                            Organize suas compras com praticidade
+                            Registro de informações sobre mananciais
                         </Text>
                     </View>
 
@@ -224,7 +212,7 @@ export default function LoginScreen() {
 
                         {/* Botão de login */}
                         <TouchableOpacity
-                            onPress={handleLogin}
+                            onPress={handleSubmit(login)}
                             disabled={isLoading}
                             style={[
                                 styles.loginButton,
