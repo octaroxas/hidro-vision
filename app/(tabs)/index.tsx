@@ -1,6 +1,6 @@
 import api from '@/api/Axios';
 import { useTheme } from '@/hooks/useTheme';
-import { Droplet, MapPin, RefreshCcw, User } from 'lucide-react-native';
+import { Droplet, MapPin, User } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -141,13 +141,15 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: t('#F9FAFB', '#111827') }]}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: t('#1F2937', '#F9FAFB') }]}>
-          Mananciais
-        </Text>
-        <TouchableOpacity onPress={fetchMananciais}>
-          <RefreshCcw size={22} color={t('#2F80ED', '#60A5FA')} />
-        </TouchableOpacity>
+      <View style={[styles.header, { backgroundColor: t('#FFFFFF', '#1F2937'), borderBottomColor: t('#E5E7EB', '#374151') }]}>
+        <View>
+          <Text style={[styles.title, { color: t('#1F2937', '#F9FAFB') }]}>HidroVision</Text>
+          <Text style={[styles.subtitle, { color: t('#6B7280', '#9CA3AF') }]}>Mananciais registrados</Text>
+        </View>
+
+        <View style={{ flexDirection: 'row', gap: 12, backgroundColor: t('#FFFFFF', '#1F2937'), borderRadius: 12, padding: 6 }}>
+
+        </View>
       </View>
 
       {loading ? (
@@ -187,13 +189,14 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 40,
     paddingBottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   title: { fontSize: 26, fontWeight: '800' },
+  subtitle: { fontSize: 14, marginTop: 4 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingText: { marginTop: 10, fontSize: 14 },
   errorText: { fontSize: 15, fontWeight: '600' },

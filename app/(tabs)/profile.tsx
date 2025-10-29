@@ -108,10 +108,6 @@ export default function ProfileScreen() {
                 </View>
             </View>
 
-            {/* Histórico */}
-            <Text style={[styles.sectionTitle, { color: t('#1F2937', '#F9FAFB') }]}>Suas últimas listas</Text>
-
-            {/* Modal de confirmação de logout */}
             <Modal
                 visible={logoutModalVisible}
                 animationType="slide"
