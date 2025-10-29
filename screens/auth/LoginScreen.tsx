@@ -1,3 +1,4 @@
+import api from '@/api/Axios';
 import PublicOnlyGate from '@/components/PublicOnlyGate';
 import { useTheme } from '@/hooks/useTheme';
 import { router } from 'expo-router';
@@ -15,6 +16,29 @@ import {
     View,
 } from 'react-native';
 
+
+type credentials = {
+    email: string;
+    password: string;
+};
+
+type authResponse = {
+    message: string;
+    data: {
+        user: User;
+        token: string;
+    };
+};
+
+export type User = {
+    id: number;
+    name: string;
+    email: string;
+    email_verified_at: string | null;
+    created_at: string;
+    updated_at: string;
+};
+
 export default function LoginScreen() {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
@@ -25,6 +49,42 @@ export default function LoginScreen() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+
+    const login = async (data: credentials) => {
+        setIsLoading(true);
+
+        try {
+            const res = await api.post<authResponse>("/auth", data);
+
+            const { token, user } = res.data.data;
+
+            if (!token || !user) {
+                throw new Error("Resposta inválida do servidor.");
+            }
+
+            api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+            setToken(token);
+
+            try {
+                await Promise.all([
+                    AsyncStorage.setItem("token", `Bearer ${token}`),
+                    AsyncStorage.setItem("user", JSON.stringify(user)),
+                ]);
+            } catch (error) {
+                alert("Não foi possível salvar os dados localmente.");
+                console.error("Erro ao salvar no AsyncStorage:", error);
+            }
+
+            router.replace("/(tabs)");
+        } catch (error: any) {
+            console.error("Erro no login:", error);
+            alert(
+                "Erro ao fazer login. Verifique suas credenciais e tente novamente. " + { error }
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleLogin = async () => {
         if (!email.trim() || !password.trim()) {
