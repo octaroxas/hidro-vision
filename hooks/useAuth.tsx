@@ -19,6 +19,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (authToken) {
                 setToken(authToken);
                 api.defaults.headers.common["Authorization"] = authToken;
+            } else {
+                router.push('/login')
             }
             if (user) {
                 setUser(user);
@@ -27,6 +29,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
         getToken();
     }, []);
+
+    const getTokenAsyncStorage = async () => {
+        // return token;
+    }
 
     const login = async (data: credentials) => {
         setLoading(true);

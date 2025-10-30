@@ -1,10 +1,9 @@
-import PublicOnlyGate from '@/components/PublicOnlyGate';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
-import { Eye, EyeOff, ShoppingBag } from 'lucide-react-native';
-import React, { useState } from 'react';
+import { Eye, EyeOff, Moon, ShoppingBag, Sun } from 'lucide-react-native';
+import React, { Fragment, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
     ActivityIndicator,
@@ -25,7 +24,7 @@ const schema = z.object({
 })
 
 export default function LoginScreen() {
-    const { theme } = useTheme();
+    const { theme, toggleTheme } = useTheme();
     const isDark = theme === 'dark';
     const t = (light: string, dark: string) => (isDark ? dark : light);
 
@@ -37,6 +36,8 @@ export default function LoginScreen() {
 
     const { control, handleSubmit, formState: { errors } } = useForm({ resolver: zodResolver(schema) })
     const { login, loading } = useAuth()
+    useEffect(() => {
+    }, []);
 
     // const login = async (data: credentials) => {
     //     setIsLoading(true);
@@ -93,11 +94,19 @@ export default function LoginScreen() {
     // };
 
     return (
-        <PublicOnlyGate>
+        <Fragment>
+            {/* <PublicOnlyGate>
+            </PublicOnlyGate> */}
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={[styles.container, { backgroundColor: t('#F9FAFB', '#111827') }]}
             >
+                <TouchableOpacity
+                    onPress={toggleTheme}
+                    style={[styles.themeButton, { backgroundColor: t('#F3F4F6', '#374151') }]}
+                >
+                    {isDark ? <Sun size={22} color="#FACC15" /> : <Moon size={22} color="#2F80ED" />}
+                </TouchableOpacity>
                 <ScrollView contentContainerStyle={styles.scrollContent}>
                     {/* Logo + Título */}
                     <View style={styles.header}>
@@ -241,7 +250,8 @@ export default function LoginScreen() {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
-        </PublicOnlyGate>
+        </Fragment>
+
     );
 }
 
@@ -249,6 +259,15 @@ const styles = StyleSheet.create({
     container: { flex: 1 },
     scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 24 },
     header: { alignItems: 'center', marginBottom: 32 },
+    themeButton: {
+        position: 'absolute',
+        top: 50,
+        right: 20,
+        padding: 8,
+        borderRadius: 8,
+        backgroundColor: '#f0f0f0',
+        zIndex: 100,
+    },
     iconCircle: {
         width: 80,
         height: 80,
