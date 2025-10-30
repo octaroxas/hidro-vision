@@ -1,7 +1,6 @@
 import { useTheme } from '@/hooks/useTheme';
 import { Tabs } from 'expo-router';
-// import { ShoppingBag, User } from 'lucide-react-native';
-
+import { Droplets, MapPin, User } from 'lucide-react-native';
 export default function TabLayout() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -17,7 +16,7 @@ export default function TabLayout() {
           backgroundColor: t('#FFFFFF', '#1F2937'),
           borderTopWidth: 1,
           borderTopColor: t('#E5E7EB', '#374151'),
-          height: 60,
+          height: 70,
           paddingBottom: 8,
           paddingTop: 8,
         },
@@ -32,17 +31,24 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Minhas Listas',
-          // tabBarIcon: ({ size, color }) => (
-          //   <ShoppingBag size={size} color={color} />
-          // ),
+          title: 'Mananciais',
+          tabBarIcon: ({ size, color }) => (
+            <Droplets size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="map"
+        options={{
+          title: 'Mapa',
+          tabBarIcon: ({ size, color }) => <MapPin size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Perfil',
-          // tabBarIcon: ({ size, color }) => <User size={size} color={color} />,
+          tabBarIcon: ({ size, color }) => <User size={size} color={color} />,
         }}
       />
     </Tabs>
