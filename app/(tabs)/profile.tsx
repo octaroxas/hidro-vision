@@ -1,3 +1,4 @@
+import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import { useRouter } from 'expo-router';
 import { LogOut, Moon, Sun } from 'lucide-react-native';
@@ -19,19 +20,10 @@ export default function ProfileScreen() {
     const [logoutModalVisible, setLogoutModalVisible] = useState(false);
     const isDark = theme === 'dark';
     const t = (light: string, dark: string) => (isDark ? dark : light);
+    const { logout } = useAuth()
+
 
     const confirmLogout = () => setLogoutModalVisible(true);
-
-    const handleLogout = async () => {
-        // try {
-        //     await supabase.auth.signOut();
-        //     setLogoutModalVisible(false);
-        //     router.replace('/login');
-        // } catch (err) {
-        //     console.error('Erro ao sair:', err);
-        //     Alert.alert('Erro', 'Não foi possível encerrar a sessão.');
-        // }
-    };
 
     // // 🔹 Enquanto carrega
     // if (loading) {
@@ -152,7 +144,7 @@ export default function ProfileScreen() {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    onPress={handleLogout}
+                                    onPress={logout}
                                     style={[styles.confirmButton, { backgroundColor: '#EF4444' }]}
                                 >
                                     <Text style={styles.confirmText}>Sair</Text>
