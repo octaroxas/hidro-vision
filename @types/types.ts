@@ -1,3 +1,5 @@
+import { LatLng } from 'react-native-maps';
+
 export type credentials = {
     email: string;
     password: string;
@@ -27,5 +29,24 @@ export type User = {
     created_at: string;
     updated_at: string;
 };
+
+export type WaterSourceType = {
+    id: number,
+    name: string,
+}
+
+export type CreatedBy = {
+    id: number,
+    name: string
+}
+
+export type WaterSource = {
+    id: number,
+    name: string,
+    description: string,
+    water_source_type: WaterSourceType,
+    created_by: CreatedBy,
+    coordinates: LatLng[],
+}
 
 
