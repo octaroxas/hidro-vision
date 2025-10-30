@@ -119,7 +119,7 @@ export default function LoginScreen() {
                             <ShoppingBag size={40} color={t('#2F80ED', '#60A5FA')} />
                         </View>
                         <Text style={[styles.appTitle, { color: t('#1F2937', '#F9FAFB') }]}>
-                            HIdroVision
+                            HidroVision
                         </Text>
                         <Text style={[styles.subtitle, { color: t('#6B7280', '#9CA3AF') }]}>
                             Registro de informações sobre mananciais
