@@ -11,23 +11,67 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [loading, setLoading] = useState(false);
     const [user, setUser] = useState<string>();
 
+    // useEffect(() => {
+    //     setLoading(true)
+    //     const getToken = async () => {
+    //         const authToken = await AsyncStorage.getItem("token");
+    //         const user = await AsyncStorage.getItem("user");
+    //         if (authToken) {
+    //             setToken(authToken);
+    //             api.defaults.headers.common["Authorization"] = authToken;
+    //         } else {
+    //             router.push('/login')
+    //         }
+    //         if (user) {
+    //             setUser(user);
+    //         }
+    //         setLoading(false);
+    //     };
+    //     getToken();
+    // }, []);
+
     useEffect(() => {
-        setLoading(true)
+        let isMounted = true;
         const getToken = async () => {
-            const authToken = await AsyncStorage.getItem("token");
-            const user = await AsyncStorage.getItem("user");
-            if (authToken) {
-                setToken(authToken);
-                api.defaults.headers.common["Authorization"] = authToken;
-            } else {
-                router.push('/login')
+            try {
+                setLoading(true);
+
+                const [authToken, storedUser] = await Promise.all([
+                    AsyncStorage.getItem('token'),
+                    AsyncStorage.getItem('user'),
+                ]);
+
+                if (!isMounted) return;
+
+                if (authToken) {
+                    setToken(authToken);
+                    api.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+                } else {
+                    router.replace('/login');
+                    return;
+                }
+
+                if (storedUser) {
+                    try {
+                        setUser(JSON.parse(storedUser));
+                    } catch {
+                        console.warn('Erro ao parsear usuário armazenado');
+                        await AsyncStorage.removeItem('user');
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao recuperar token ou usuário:', error);
+                router.replace('/login');
+            } finally {
+                if (isMounted) setLoading(false);
             }
-            if (user) {
-                setUser(user);
-            }
-            setLoading(false);
         };
+
         getToken();
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const getTokenAsyncStorage = async () => {

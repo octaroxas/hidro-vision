@@ -1,8 +1,10 @@
+import Input from '@/components/form/Input';
+import InputPassword from '@/components/form/InputPassword';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
-import { Eye, EyeOff, Moon, ShoppingBag, Sun } from 'lucide-react-native';
+import { Moon, ShoppingBag, Sun } from 'lucide-react-native';
 import React, { Fragment, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
@@ -12,9 +14,8 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import { z } from 'zod';
 
@@ -35,63 +36,9 @@ export default function LoginScreen() {
     const [showPassword, setShowPassword] = useState(false);
 
     const { control, handleSubmit, formState: { errors } } = useForm({ resolver: zodResolver(schema) })
-    const { login, loading } = useAuth()
+    const { login } = useAuth()
     useEffect(() => {
     }, []);
-
-    // const login = async (data: credentials) => {
-    //     setIsLoading(true);
-
-    //     try {
-    //         const res = await api.post<authResponse>("/auth", data);
-
-    //         const { token, user } = res.data.data;
-
-    //         if (!token || !user) {
-    //             throw new Error("Resposta inválida do servidor.");
-    //         }
-
-    //         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    //         setToken(token);
-
-    //         try {
-    //             await Promise.all([
-    //                 AsyncStorage.setItem("token", `Bearer ${token}`),
-    //                 AsyncStorage.setItem("user", JSON.stringify(user)),
-    //             ]);
-    //         } catch (error) {
-    //             alert("Não foi possível salvar os dados localmente.");
-    //             console.error("Erro ao salvar no AsyncStorage:", error);
-    //         }
-
-    //         router.replace("/(tabs)");
-    //     } catch (error: any) {
-    //         console.error("Erro no login:", error);
-    //         alert(
-    //             "Erro ao fazer login. Verifique suas credenciais e tente novamente. " + { error }
-    //         );
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
-    // const handleLogin = async () => {
-    //     if (!email.trim() || !password.trim()) {
-    //         setError('Por favor, preencha todos os campos');
-    //         return;
-    //     }
-
-    //     setIsLoading(true);
-    //     setError('');
-
-    //     try {
-
-    //     } catch (error: any) {
-    //         setError(error.message || 'Erro ao fazer login. Por favor, tente novamente.');
-    //     } finally {
-    //         setIsLoading(false);
-    //     }
-    // };
 
     return (
         <Fragment>
@@ -159,65 +106,20 @@ export default function LoginScreen() {
                             </Text>
                         ) : null}
 
-                        {/* Campo de e-mail */}
-                        <View style={styles.inputGroup}>
-                            <Text style={[styles.label, { color: t('#374151', '#D1D5DB') }]}>
-                                E-mail
-                            </Text>
-                            <TextInput
-                                style={[
-                                    styles.input,
-                                    {
-                                        backgroundColor: t('#F9FAFB', '#111827'),
-                                        borderColor: t('#D1D5DB', '#374151'),
-                                        color: t('#1F2937', '#F9FAFB'),
-                                    },
-                                ]}
-                                placeholder="seu@email.com"
-                                placeholderTextColor={t('#9CA3AF', '#6B7280')}
-                                value={email}
-                                onChangeText={setEmail}
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                            />
-                        </View>
-
-                        {/* Campo de senha */}
-                        <View style={styles.inputGroup}>
-                            <Text style={[styles.label, { color: t('#374151', '#D1D5DB') }]}>
-                                Senha
-                            </Text>
-                            <View
-                                style={[
-                                    styles.passwordContainer,
-                                    {
-                                        backgroundColor: t('#F9FAFB', '#111827'),
-                                        borderColor: t('#D1D5DB', '#374151'),
-                                    },
-                                ]}
-                            >
-                                <TextInput
-                                    style={[styles.passwordInput, { color: t('#1F2937', '#F9FAFB') }]}
-                                    placeholder="••••••••"
-                                    placeholderTextColor={t('#9CA3AF', '#6B7280')}
-                                    value={password}
-                                    onChangeText={setPassword}
-                                    secureTextEntry={!showPassword}
-                                    autoCapitalize="none"
-                                />
-                                <TouchableOpacity
-                                    onPress={() => setShowPassword(!showPassword)}
-                                    style={styles.eyeButton}
-                                >
-                                    {showPassword ? (
-                                        <EyeOff size={20} color={t('#6B7280', '#9CA3AF')} />
-                                    ) : (
-                                        <Eye size={20} color={t('#6B7280', '#9CA3AF')} />
-                                    )}
-                                </TouchableOpacity>
-                            </View>
-                        </View>
+                        <Input
+                            control={control}
+                            name="email"
+                            label="E-mail"
+                            placeholder="user@gmail.com"
+                            error={errors?.email?.message}
+                        />
+                        <InputPassword
+                            control={control}
+                            name="password"
+                            label="Senha"
+                            placeholder="***************"
+                            error={errors?.password?.message}
+                        />
 
                         {/* Botão de login */}
                         <TouchableOpacity
