@@ -28,7 +28,7 @@ type WaterSource = {
   coordinates: Coordinate[];
 };
 
-export default function HomeScreen() {
+export default function HomeRoute() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const t = (light: string, dark: string) => (isDark ? dark : light);

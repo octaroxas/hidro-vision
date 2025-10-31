@@ -33,6 +33,9 @@ export type User = {
 export type WaterSourceType = {
     id: number,
     name: string,
+    deleted_at: string,
+    created_at: string,
+    updated_at: string
 }
 
 export type CreatedBy = {
@@ -47,6 +50,30 @@ export type WaterSource = {
     water_source_type: WaterSourceType,
     created_by: CreatedBy,
     coordinates: LatLng[],
+}
+
+export type FormWaterSource = {
+    name: string;
+    description?: string | null;
+    water_source_type_id: number;
+    created_by: number;
+    coordinates?: LatLng[]
+};
+
+// export  type WaterSourceType = {
+//     id: number,
+//     name: string,
+//     deleted_at: string,
+//     created_at: string,
+//     updated_at: string
+// }
+export type WaterClass = {
+    id: number,
+    water_class: string,
+    description: string,
+    deleted_at: string,
+    created_at: string,
+    updated_at: string
 }
 
 

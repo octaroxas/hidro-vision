@@ -26,7 +26,7 @@ const INITIAL_REGION = {
   longitudeDelta: 0.05,
 };
 
-export default function TabTwoScreen() {
+export default function MapRoute() {
   const [waterSources, setWaterSources] = useState<WaterSource[]>();
   const [loading, setLoading] = useState(true);
   const [selectedSource, setSelectedSource] = useState<WaterSource | null>(null);

@@ -11,7 +11,7 @@ import {
     View
 } from 'react-native';
 
-export default function ProfileScreen() {
+export default function ProfileRoute() {
     const router = useRouter();
     const { theme, toggleTheme } = useTheme();
     const [user, setUser] = useState<any>(null);
