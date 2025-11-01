@@ -180,10 +180,10 @@ export default function MapRoute() {
             </Text>
             <TouchableOpacity
               style={styles.modalButton}
-            // onPress={() => {
-            //   setSelectedSource(null);
-            //   router.push(`/WaterSources/WaterSourceDetails?id=${selectedSource?.id}`);
-            // }}
+              onPress={() => {
+                setSelectedSource(null);
+                router.push(`/water_sources/details?id=${selectedSource?.id}`);
+              }}
             >
               <Text style={styles.modalButtonText}>Ver detalhes</Text>
             </TouchableOpacity>

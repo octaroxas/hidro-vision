@@ -1,5 +1,6 @@
 import api from '@/api/Axios';
 import { useTheme } from '@/hooks/useTheme';
+import { router } from '@/router/Router';
 import { Droplet, MapPin, User } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -69,6 +70,7 @@ export default function HomeRoute() {
 
   const renderItem = ({ item }: { item: WaterSource }) => (
     <TouchableOpacity
+      onPress={() => router.push(`/water_sources/details?id=${item.id}`)}
       activeOpacity={0.9}
       style={[
         styles.card,

@@ -23,8 +23,11 @@ function LayoutContent() {
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
-        {/* <Stack.Screen name="login" options={{ headerShown: false }} /> */}
+        <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="/water_sources" options={{ headerShown: false }} />
+        <Stack.Screen name="/water_sources/create" options={{ headerShown: false }} />
+        <Stack.Screen name="/water_sources/details" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
 
