@@ -5,7 +5,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
 import { Moon, ShoppingBag, Sun } from 'lucide-react-native';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
     ActivityIndicator,
@@ -17,6 +17,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 const schema = z.object({
@@ -41,20 +42,26 @@ export default function LoginScreen() {
     }, []);
 
     return (
-        <Fragment>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: t('#F9FAFB', '#111827') }]}>
             {/* <PublicOnlyGate>
             </PublicOnlyGate> */}
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={[styles.container, { backgroundColor: t('#F9FAFB', '#111827') }]}
             >
-                <TouchableOpacity
-                    onPress={toggleTheme}
-                    style={[styles.themeButton, { backgroundColor: t('#F3F4F6', '#374151') }]}
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                    style={{ flex: 1, backgroundColor: t('#F9FAFB', '#111827') }}
                 >
-                    {isDark ? <Sun size={22} color="#FACC15" /> : <Moon size={22} color="#2F80ED" />}
-                </TouchableOpacity>
-                <ScrollView contentContainerStyle={styles.scrollContent}>
+
+                    <TouchableOpacity
+                        onPress={toggleTheme}
+                        style={[styles.themeButton, { backgroundColor: t('#F3F4F6', '#374151') }]}
+                    >
+                        {isDark ? <Sun size={22} color="#FACC15" /> : <Moon size={22} color="#2F80ED" />}
+                    </TouchableOpacity>
                     {/* Logo + Título */}
                     <View style={styles.header}>
                         <View
@@ -152,12 +159,13 @@ export default function LoginScreen() {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
-        </Fragment>
+        </SafeAreaView>
 
     );
 }
 
 const styles = StyleSheet.create({
+    safeArea: { flex: 1 },
     container: { flex: 1 },
     scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 24 },
     header: { alignItems: 'center', marginBottom: 32 },
