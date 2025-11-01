@@ -58,6 +58,7 @@ export type FormWaterSource = {
     water_source_type_id: number;
     created_by: number;
     coordinates?: LatLng[]
+    water_class_id: number
 };
 
 // export  type WaterSourceType = {

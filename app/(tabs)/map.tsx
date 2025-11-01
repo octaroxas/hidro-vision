@@ -1,4 +1,5 @@
 import { WaterSource } from "@/@types/types";
+import { router } from "@/router/Router";
 import axios from "axios";
 import { Droplets, Plus, X } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
@@ -151,7 +152,7 @@ export default function MapRoute() {
 
           <TouchableOpacity
             style={styles.floatingButton}
-            onPress={() => setIsCreateModalVisible(true)}
+            onPress={() => router.push('/water_sources/create')}
             activeOpacity={0.85}
           >
             <Plus size={24} color="#fff" />

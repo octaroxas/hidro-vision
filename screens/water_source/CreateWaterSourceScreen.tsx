@@ -1,28 +1,28 @@
+import { FormWaterSource, WaterClass, WaterSource, WaterSourceType } from "@/@types/types";
 import api from "@/api/Axios";
+import ButtonP from "@/components/form/Button";
 import Input from "@/components/form/Input";
+import { useTheme } from "@/hooks/useTheme";
+import { router } from "@/router/Router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Picker } from '@react-native-picker/picker';
+import { isAxiosError } from "axios";
 import React, { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from 'react-hook-form';
-import MapView, { LatLng, MapPressEvent, Marker, MarkerDragStartEndEvent, Polygon, PROVIDER_GOOGLE } from "react-native-maps";
-// import { WebViewMessageEvent } from 'react-native-webview';
-import { z } from "zod";
-
-import { FormWaterSource, WaterClass, WaterSource, WaterSourceType } from "@/@types/types";
-import ButtonP from "@/components/form/Button";
-import { router } from "@/router/Router";
-import { isAxiosError } from "axios";
 import {
     ActivityIndicator,
     Alert,
     Dimensions,
-    SafeAreaView,
+    KeyboardAvoidingView,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
-    TouchableOpacity,
     View
 } from "react-native";
+import MapView, { LatLng, MapPressEvent, Marker, MarkerDragStartEndEvent, Polygon, PROVIDER_GOOGLE } from "react-native-maps";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { z } from "zod";
 
 const INITIAL_REGION = {
     latitude: -2.430070,
@@ -31,136 +31,54 @@ const INITIAL_REGION = {
     longitudeDelta: 0.05,
 };
 
-// type CreatedBy = {
-//     id: number,
-//     name: string
-// }
-
-// type WaterSource = {
-//     id: number,
-//     name: string,
-//     description: string,
-//     water_source_type: WaterSourceType,
-//     created_by: CreatedBy,
-//     coordinates: LatLng[],
-// }
-
-// type FormWaterSource = {
-//     name: string;
-//     description?: string | null;
-//     water_source_type_id: number;
-//     created_by: number;
-//     coordinates?: LatLng[]
-// };
-
-// type WaterSourceType = {
-//     id: number,
-//     name: string,
-//     deleted_at: string,
-//     created_at: string,
-//     updated_at: string
-// }
-// type WaterClass = {
-//     id: number,
-//     water_class: string,
-//     description: string,
-//     deleted_at: string,
-//     created_at: string,
-//     updated_at: string
-// }
-
-const coordinatesSchema = z.object({
-    latitude: z.number(),
-    longitude: z.number(),
-})
-
 const schema = z.object({
-    name: z.string({ required_error: 'O nome do manancial é obrigatório!' }).nonempty('O nome do manancial é obrigatório!'),
+    name: z.string({ required_error: 'O nome do manancial é obrigatório!' }).nonempty(),
     description: z.string().optional().nullable(),
     water_source_type_id: z.number({ required_error: 'O tipo de manancial é obrigatório!' }),
     water_class_id: z.number({ required_error: 'A classe é obrigatória!' }),
     created_by: z.number(),
-})
+});
 
 export default function CreateWaterSourceScreen() {
-    const [loading, setLoading] = useState<boolean>(false);
-    const { control, handleSubmit, setValue, formState: { errors } } = useForm({
+    const [loading, setLoading] = useState(false);
+    const { control, handleSubmit, formState: { errors } } = useForm<FormWaterSource>({
         resolver: zodResolver(schema),
-        defaultValues: {
-            water_source_type_id: undefined,
-            created_by: 1,
-            water_class_id: undefined,
-            description: null,
-        }
-    })
+        defaultValues: { water_source_type_id: undefined, created_by: 1, water_class_id: undefined, description: null },
+    });
+
+    const { theme, toggleTheme } = useTheme();
+    const isDark = theme === 'dark';
+    const t = (light: string, dark: string) => (isDark ? dark : light);
+
     const [waterSourceTypes, setWaterSourceTypes] = useState<WaterSourceType[]>([]);
     const [waterClasses, setWaterClasses] = useState<WaterClass[]>([]);
     const [mapCoordinates, setMapCoordinates] = useState<LatLng[]>([]);
     const [waterSources, setWaterSources] = useState<WaterSource[]>();
 
-    function getPolygonCenter(coordinates: LatLng[]): LatLng {
-        const latSum = coordinates.reduce((sum, coord) => sum + coord.latitude, 0);
-        const lngSum = coordinates.reduce((sum, coord) => sum + coord.longitude, 0);
-        return {
-            latitude: latSum / coordinates.length,
-            longitude: lngSum / coordinates.length,
-        };
-    }
-    // const onMessage = (event: WebViewMessageEvent) => {
-    //     try {
-    //         const data = JSON.parse(event.nativeEvent.data)
-    //         if (data.latitude && data.longitude) {
-    //             setMapCoordinates((prevCoord) => [...prevCoord, { latitude: data.latitude, longitude: data.longitude }])
-    //         }
-    //     } catch (error) {
-    //         console.log('erro ao obter os dados do mapa!', error)
-    //     }
-    // }
-
-    const onMapPress = (event: MapPressEvent) => {
-        const { coordinate } = event.nativeEvent;
-        const newCoord = { latitude: coordinate.latitude, longitude: coordinate.longitude }
-        const updatedCoords = [...mapCoordinates, newCoord]
-        setMapCoordinates(updatedCoords)
-    }
-
-    const onDragEnd = (event: MarkerDragStartEndEvent, index: number) => {
-        const { coordinate } = event.nativeEvent;
-        setMapCoordinates((prevMarkers: LatLng[]) => {
-            const updatedMarkers = [...prevMarkers];
-            updatedMarkers[index] = coordinate;
-            return updatedMarkers;
-        });
-    }
-
     const sanitazeCoord = useCallback((coord: number) => {
-        let [num, dig] = coord.toString().split('.')
-        dig = dig.slice(0, 8);
-        return parseFloat(num + '.' + dig)
-    }, [])
+        let [num, dig] = coord.toString().split('.');
+        dig = dig?.slice(0, 8) || "0";
+        return parseFloat(num + '.' + dig);
+    }, []);
 
     useEffect(() => {
         async function getWaterSources() {
             try {
-                const [waterSourceTypesRes, waterClassesRes, waterSourcesRes] = await Promise.all([
+                const [typesRes, classesRes, sourcesRes] = await Promise.all([
                     api.get<{ data: WaterSourceType[] }>('/water-sources-types'),
                     api.get<{ data: WaterClass[] }>('/water-classes'),
                     api.get<{ data: WaterSource[] }>('/water-sources'),
-                ])
-                const waterSourcesFromAPI = waterSourcesRes.data.data.map((item: WaterSource) => ({
-                    id: item.id,
-                    name: item.name,
-                    description: item.description,
-                    water_source_type: item.water_source_type,
-                    created_by: item.created_by,
-                    coordinates: item.coordinates.map((coord: LatLng) => ({
-                        latitude: Number(coord.latitude),
-                        longitude: Number(coord.longitude),
-                    }))
+                ]);
+                const sources = sourcesRes.data.data.map((item: WaterSource) => ({
+                    ...item,
+                    coordinates: item.coordinates.map((c: LatLng) => ({
+                        latitude: Number(c.latitude),
+                        longitude: Number(c.longitude),
+                    })),
                 }));
-                setWaterSources(waterSourcesFromAPI)
-                setWaterSourceTypes(waterSourceTypesRes.data.data)
-                setWaterClasses(waterClassesRes.data.data)
+                setWaterSources(sources);
+                setWaterSourceTypes(typesRes.data.data);
+                setWaterClasses(classesRes.data.data);
             } catch (error) {
                 console.error('Erro ao buscar os dados:', error);
             }
@@ -168,246 +86,354 @@ export default function CreateWaterSourceScreen() {
         getWaterSources();
     }, []);
 
+    const onMapPress = (event: MapPressEvent) => {
+        const { coordinate } = event.nativeEvent;
+        setMapCoordinates((prev) => [...prev, coordinate]);
+    };
+
+    const onDragEnd = (event: MarkerDragStartEndEvent, index: number) => {
+        const { coordinate } = event.nativeEvent;
+        setMapCoordinates((prev) => {
+            const updated = [...prev];
+            updated[index] = coordinate;
+            return updated;
+        });
+    };
+
     const onSubmit = async (data: FormWaterSource) => {
-        console.log(mapCoordinates)
         if (mapCoordinates.length < 3) {
-            Alert.alert('Atenção', 'Marque no mínimo 3 pontos no mapa para que possa ser possível delimitar a área do manancial!')
-            return
+            Alert.alert('Atenção', 'Marque no mínimo 3 pontos no mapa para delimitar o manancial!');
+            return;
         }
 
         const payload = {
             ...data,
-            coordinates: mapCoordinates.map((coordnate) => ({
-                latitude: sanitazeCoord(coordnate.latitude),
-                longitude: sanitazeCoord(coordnate.longitude),
-            }))
-        }
-        console.log(payload)
-        setLoading(true)
+            coordinates: mapCoordinates.map((coord) => ({
+                latitude: sanitazeCoord(coord.latitude),
+                longitude: sanitazeCoord(coord.longitude),
+            })),
+        };
 
+        setLoading(true);
         try {
-            const res = await api.post(
-                '/water-sources/store',
-                payload,
-                { headers: { 'Content-Type': 'application/json' } }
-            );
-            alert(`${JSON.stringify(res.data.data.name)} cadastrado!`);
+            const res = await api.post('/water-sources/store', payload, {
+                headers: { 'Content-Type': 'application/json' },
+            });
+            Alert.alert('Sucesso', `${res.data.data.name} cadastrado!`);
             router.replace(`/(tabs)`);
         } catch (error) {
             console.error(error);
             if (isAxiosError(error) && error.response) {
-                console.log(error.response.data)
-                alert(error.response.data.message)
+                Alert.alert('Erro', error.response.data.message);
             } else {
-                alert(`Erro ao cadastrar o manancial ${error}`)
+                Alert.alert('Erro', 'Não foi possível cadastrar o manancial.');
             }
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-
-    }
+    };
 
     if (loading) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" />
-                <Text>Cadastrando manancial...</Text>
+                <ActivityIndicator size="large" color={t('#2F80ED', '#60A5FA')} />
+                <Text style={{ color: t('#111827', '#F9FAFB'), marginTop: 10 }}>Cadastrando manancial...</Text>
             </View>
         );
     }
 
     return (
-        <SafeAreaView style={styles.container}>
-
-            <Text style={styles.title}>Registro de manancial</Text>
-            <ScrollView>
-
-                <Input error={errors?.name?.message} control={control} label="Nome" name="name" placeholder="Informe o nome" />
-
-                <Input error={errors?.description?.message} control={control} label="Descrição" name="description" placeholder="Informe a descrição" />
-
-                <Controller
-                    control={control}
-                    rules={{ required: true }}
-                    name="water_source_type_id"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <View>
-                            <Text style={{ fontWeight: 'bold' }}>Tipo de manancial</Text>
-                            <TouchableOpacity
-                                style={[styles.pickerContainer, errors.water_source_type_id ? styles.inputError : null]}
-                            >
-                                <Picker
-                                    style={[styles.picker, errors.water_source_type_id ? styles.inputError : null]}
-                                    onValueChange={(itemValue, itemIndex) =>
-                                        onChange(Number(itemValue))
-                                    }>
-                                    <Picker.Item key='#09785' label='Selecione' value={null} />
-                                    {waterSourceTypes.map((item) => (
-                                        <Picker.Item key={item.created_at} label={item.name} value={item.id} />
-                                    ))}
-                                </Picker>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                />
-                {errors.water_source_type_id && <Text style={styles.errorText}>{errors.water_source_type_id.message}</Text>}
-
-                <Controller
-                    control={control}
-                    rules={{ required: true }}
-                    name="water_class_id"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <View>
-                            <Text style={{ fontWeight: 'bold' }}>Classe hídrica</Text>
-                            <TouchableOpacity
-                                style={[styles.pickerContainer, errors.water_class_id ? styles.inputError : null]}
-                            >
-                                <Picker
-                                    style={[styles.picker, errors.water_source_type_id ? styles.inputError : null]}
-                                    onValueChange={(itemValue, itemIndex) =>
-                                        onChange(Number(itemValue))
-                                    }>
-                                    <Picker.Item key='#0978439' label='Selecione' value={null} />
-                                    {waterClasses.map((item) => (
-                                        <Picker.Item key={item.created_at} label={item.water_class} value={item.id} />
-                                    ))}
-                                </Picker>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                />
-                {errors.water_class_id && <Text style={styles.errorText}>{errors.water_class_id.message}</Text>}
-
-                <Text style={{ fontWeight: 'bold', marginVertical: 5 }}>Coordenadas do manancial</Text>
-                <MapView
-                    provider={PROVIDER_GOOGLE}
-                    style={styles.map}
-                    initialRegion={INITIAL_REGION}
-                    onPress={onMapPress}
-                    zoomControlEnabled
-                    zoomEnabled
-                    zoomTapEnabled
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: t('#F9FAFB', '#111827') }]}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ flex: 1 }}
+            >
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                    style={{ flex: 1, backgroundColor: t('#F9FAFB', '#111827') }}
                 >
 
-                    {
-                        waterSources?.map((marker: WaterSource) => (
+                    <Input control={control} name="name" label="Nome do manancial" placeholder="Ex: Igarapé do Tapajós" error={errors?.name?.message} />
+
+                    <Input control={control} name="description" label="Descrição" placeholder="Breve descrição" error={errors?.description?.message} />
+
+                    {/* Picker tipo */}
+                    <Controller
+                        control={control}
+                        name="water_source_type_id"
+                        render={({ field: { onChange, value } }) => (
+                            <View style={styles.inputGroup}>
+                                {/* Label */}
+                                <Text style={[styles.label, { color: t('#374151', '#D1D5DB') }]}>
+                                    Tipo de manancial
+                                </Text>
+
+                                {/* Picker estilizado */}
+                                <View
+                                    style={[
+                                        styles.pickerWrapper,
+                                        {
+                                            backgroundColor: t('#F9FAFB', '#111827'),
+                                            borderColor: t('#D1D5DB', '#374151'),
+                                        },
+                                        errors.water_source_type_id && styles.inputError,
+                                    ]}
+                                >
+                                    <Picker
+                                        selectedValue={value}
+                                        style={[
+                                            styles.picker,
+                                            { color: t('#1F2937', '#F9FAFB') },
+                                        ]}
+                                        dropdownIconColor={t('#1F2937', '#F9FAFB')}
+                                        onValueChange={(val) => onChange(Number(val))}
+                                    >
+                                        <Picker.Item label="Selecione" value={null} />
+                                        {waterSourceTypes.map((item) => (
+                                            <Picker.Item key={item.id} label={item.name} value={item.id} />
+                                        ))}
+                                    </Picker>
+                                </View>
+
+                                {/* Erro */}
+                                {errors.water_source_type_id && (
+                                    <Text style={styles.errorText}>
+                                        {errors.water_source_type_id.message}
+                                    </Text>
+                                )}
+                            </View>
+                        )}
+                    />
+
+                    {/* Picker classe */}
+                    {/* <Controller
+                        control={control}
+                        name="water_class_id"
+                        render={({ field: { onChange, value } }) => (
+                            <View style={{ marginBottom: 12 }}>
+                                <Text style={[styles.label, { color: t('#1F2937', '#F9FAFB') }]}>Classe hídrica</Text>
+                                <View style={[styles.pickerContainer, errors.water_class_id && styles.inputError]}>
+                                    <Picker
+                                        selectedValue={value}
+                                        style={[styles.picker, { color: t('#111827', '#F9FAFB') }]}
+                                        dropdownIconColor={t('#111827', '#F9FAFB')}
+                                        onValueChange={(val) => onChange(Number(val))}
+                                    >
+                                        <Picker.Item label="Selecione" value={null} />
+                                        {waterClasses.map((item) => (
+                                            <Picker.Item key={item.id} label={item.water_class} value={item.id} />
+                                        ))}
+                                    </Picker>
+                                </View>
+                                {errors.water_class_id && (
+                                    <Text style={styles.errorText}>{errors.water_class_id.message}</Text>
+                                )}
+                            </View>
+                        )}
+                    /> */}
+
+                    <Controller
+                        control={control}
+                        name="water_class_id"
+                        render={({ field: { onChange, value } }) => (
+                            <View style={styles.inputGroup}>
+                                {/* Label */}
+                                <Text style={[styles.label, { color: t('#374151', '#D1D5DB') }]}>
+                                    Classe hídrica
+                                </Text>
+
+                                {/* Picker estilizado */}
+                                <View
+                                    style={[
+                                        styles.pickerWrapper,
+                                        {
+                                            backgroundColor: t('#F9FAFB', '#111827'),
+                                            borderColor: t('#D1D5DB', '#374151'),
+                                        },
+                                        errors.water_class_id && styles.inputError,
+                                    ]}
+                                >
+                                    <Picker
+                                        selectedValue={value}
+                                        style={[styles.picker, { color: t('#1F2937', '#F9FAFB') }]}
+                                        dropdownIconColor={t('#1F2937', '#F9FAFB')}
+                                        onValueChange={(val) => onChange(Number(val))}
+                                    >
+                                        <Picker.Item label="Selecione" value={null} />
+                                        {waterClasses.map((item) => (
+                                            <Picker.Item
+                                                key={item.id}
+                                                label={item.water_class}
+                                                value={item.id}
+                                            />
+                                        ))}
+                                    </Picker>
+                                </View>
+
+                                {/* Mensagem de erro */}
+                                {errors.water_class_id && (
+                                    <Text style={styles.errorText}>{errors.water_class_id.message}</Text>
+                                )}
+                            </View>
+                        )}
+                    />
+
+
+                    {/* Mapa */}
+                    <Text style={[styles.label, { color: t('#1F2937', '#F9FAFB') }]}>Delimitação no mapa</Text>
+                    <MapView
+                        provider={PROVIDER_GOOGLE}
+                        style={styles.map}
+                        initialRegion={INITIAL_REGION}
+                        onPress={onMapPress}
+                        zoomEnabled
+                        zoomTapEnabled
+                    >
+                        {waterSources?.map((marker) => (
                             <Polygon
                                 key={marker.id}
                                 coordinates={marker.coordinates}
-                                strokeColor="#FF0000"
-                                fillColor="rgba(255,0,0,0.3)"
+                                strokeColor="#2563EB"
+                                fillColor="rgba(37, 99, 235, 0.3)"
                                 strokeWidth={2}
                             />
-                        ))
-                    }
-                    {
-                        mapCoordinates.map((marker, index) => (
+                        ))}
+                        {mapCoordinates.map((marker, index) => (
                             <Marker
                                 key={index}
                                 coordinate={marker}
-                                title={`Coordenada ${index + 1}`}
-                                description={`Latitude:${marker.latitude}, Longitude:${marker.longitude}`}
+                                title={`Ponto ${index + 1}`}
                                 draggable
-                                onDragEnd={e => onDragEnd(e, index)}
+                                onDragEnd={(e) => onDragEnd(e, index)}
                             />
-                        ))
-                    }
-
-                    {
-                        mapCoordinates.length >= 3 && (
+                        ))}
+                        {mapCoordinates.length >= 3 && (
                             <Polygon
                                 coordinates={mapCoordinates}
-                                strokeColor="#FF0000"
-                                fillColor="rgba(0, 89, 255, 0.3)"
+                                strokeColor="#2F80ED"
+                                fillColor="rgba(37, 99, 235, 0.3)"
                                 strokeWidth={2}
                             />
-                        )
-                    }
-                </MapView>
-            </ScrollView>
-            <View style={styles.buttonsContainer}>
-                <ButtonP loading={false} disabled={false} size="md" title="Cadastrar" style={{ width: '70%' }} onPress={handleSubmit(onSubmit)} />
-                <ButtonP loading={false} disabled={false} size="md" variant='outline' style={{ width: '30%' }} title="Salvar rascunho" onPress={() => { }} />
-            </View>
+                        )}
+                    </MapView>
+
+                    {/* Botões */}
+                    <View style={styles.buttonsContainer}>
+                        <ButtonP title="Cadastrar" onPress={handleSubmit(onSubmit)} style={{ width: '65%' }} />
+                        <ButtonP title="Salvar rascunho" variant="outline" style={{ width: '30%' }} />
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-        paddingVertical: 20,
-        paddingHorizontal: 10
+    safeArea: { flex: 1 },
+    scrollContent: { flexGrow: 1, padding: 24 },
+    header: { alignItems: 'center', marginBottom: 32 },
+    themeButton: {
+        position: 'absolute',
+        top: 50,
+        right: 20,
+        padding: 8,
+        borderRadius: 8,
+        zIndex: 100,
     },
-    title: {
-        fontSize: 25,
-        fontWeight: 'bold',
-        marginVertical: 20
-    },
-    input: {
-        borderWidth: 1,
-        borderRadius: 5,
-        borderColor: '#4B5563',
-        padding: 10,
-        marginBottom: 12,
-    },
-    error: {
-        color: 'red',
-        marginBottom: 8,
-    },
-    map: {
-        width: Dimensions.get('window').width - 20,
-        height: Dimensions.get('screen').height - 500,
+    iconCircle: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
         marginBottom: 16,
+    },
+    appTitle: {
+        fontSize: 28,
+        fontWeight: '800',
+        textAlign: 'center',
+    },
+    subtitle: {
+        fontSize: 14,
+        textAlign: 'center',
+        marginTop: 6,
+    },
+    card: {
+        borderRadius: 20,
+        padding: 20,
+        borderWidth: 1,
+        marginBottom: 20,
+    },
+    // label: {
+    //     fontSize: 15,
+    //     fontWeight: '600',
+    //     marginBottom: 6,
+    // },
+    pickerContainer: {
+        borderWidth: 1,
+        borderColor: '#D1D5DB',
+        borderRadius: 10,
+        backgroundColor: '#F9FAFB',
+    },
+    // picker: {
+    //     height: 45,
+    //     width: '100%',
+    // },
+    // inputError: {
+    //     borderColor: '#f87171',
+    //     backgroundColor: '#ffe4e6',
+    // },
+    // errorText: {
+    //     color: '#b91c1c',
+    //     marginTop: 4,
+    //     fontSize: 12,
+    // },
+    map: {
+        width: '100%',
+        height: Dimensions.get('window').height * 0.35,
+        borderRadius: 12,
+        marginTop: 10,
+        marginBottom: 20,
+    },
+    buttonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 8,
+        marginTop: 8,
     },
     center: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    pickerContainer: {
-        // borderWidth: 1,
-        // borderColor: '#ccc',
-        // borderRadius: 8,
-        // paddingHorizontal: 5,
-        // backgroundColor: '#fff',
-        // height: 40,
-        width: '100%',
-        borderRadius: 6,
+
+
+
+    // 
+    inputGroup: { marginBottom: 16 },
+    label: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
+
+    pickerWrapper: {
         borderWidth: 1,
-        borderColor: '#d1d5db',
-        backgroundColor: '#f1f1f1',
-        paddingHorizontal: 12,
-        fontSize: 14,
-        color: '#000',
-        display: 'flex',
-        flexDirection: 'column',
-        // alignItems: 'center',
-        marginVertical: 5
+        borderRadius: 10,
+        overflow: 'hidden',
+        height: 52,
+        justifyContent: 'center',
+        paddingHorizontal: 8,
     },
     picker: {
-        color: '#333',
-        // backgroundColor: '#fff',
-        backfaceVisibility: 'hidden',
-        borderWidth: 1,
-        borderRadius: 5,
-        borderColor: '#4B5563',
+        width: '100%',
+        height: 50,
     },
     inputError: {
         borderColor: '#f87171',
         backgroundColor: '#ffe4e6',
-        color: '#b91c1c'
     },
     errorText: {
         color: '#b91c1c',
         marginTop: 4,
-        fontSize: 12
+        fontSize: 12,
     },
-    buttonsContainer: {
-        display: 'flex',
-        gap: 5,
-        width: '100%',
-        flexDirection: 'row'
-    }
 });
