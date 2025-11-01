@@ -44,7 +44,21 @@ export default function InputPassword({ control, name, placeholder, label, error
                             value={value}
                         />
                         <TouchableOpacity style={styles.eyeButton} onPress={togglePasswordVisibility}>
-                            <Text>{showPassword ? <Feather style={error ? styles.errorIcon : null} name='eye-off' size={25} /> : <Feather style={error ? styles.errorIcon : null} name='eye' size={25} />}</Text>
+                            {showPassword ? (
+                                <Feather
+                                    name="eye-off"
+                                    size={20}
+                                    style={[error ? styles.errorIcon : null]}
+                                    color={t('#9CA3AF', '#6B7280')}
+                                />
+                            ) : (
+                                <Feather
+                                    name="eye"
+                                    size={20}
+                                    style={[error ? styles.errorIcon : null]}
+                                    color={t('#9CA3AF', '#6B7280')}
+                                />
+                            )}
                         </TouchableOpacity>
                     </View>
                     {error && <Text style={styles.errorText}>{error}</Text>}
