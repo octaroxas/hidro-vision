@@ -37,12 +37,13 @@ export default function InputPassword({ control, name, placeholder, label, error
                         <TextInput
                             secureTextEntry={showPassword}
                             style={[styles.passwordInput, { color: t('#1F2937', '#F9FAFB') }]}
+                            placeholderTextColor={t('#9CA3AF', '#6B7280')}
                             placeholder={placeholder}
                             onBlur={onBlur}
                             onChangeText={onChange}
                             value={value}
                         />
-                        <TouchableOpacity style={styles.eyeButton}>
+                        <TouchableOpacity style={styles.eyeButton} onPress={togglePasswordVisibility}>
                             <Text>{showPassword ? <Feather style={error ? styles.errorIcon : null} name='eye-off' size={25} /> : <Feather style={error ? styles.errorIcon : null} name='eye' size={25} />}</Text>
                         </TouchableOpacity>
                     </View>

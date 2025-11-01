@@ -28,7 +28,9 @@ export default function Input({ control, name, placeholder, label, error }: Inpu
                                 borderColor: t('#D1D5DB', '#374151'),
                                 color: t('#1F2937', '#F9FAFB'),
                             },
+
                         ]}
+                        placeholderTextColor={t('#9CA3AF', '#6B7280')}
                         placeholder={placeholder}
                         onBlur={onBlur}
                         onChangeText={onChange}
