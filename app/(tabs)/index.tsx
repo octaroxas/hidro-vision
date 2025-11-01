@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   RefreshControl,
   StyleSheet,
   Text,
@@ -68,78 +69,184 @@ export default function HomeRoute() {
     fetchMananciais();
   };
 
-  const renderItem = ({ item }: { item: WaterSource }) => (
-    <TouchableOpacity
-      onPress={() => router.push(`/water_sources/details?id=${item.id}`)}
-      activeOpacity={0.9}
-      style={[
-        styles.card,
-        {
-          borderColor: t('#E5E7EB', '#2E3440'),
-          backgroundColor: t('#FFFFFF', '#1E293B'),
-          shadowColor: isDark ? 'transparent' : 'rgba(0,0,0,0.05)',
-        },
-      ]}
-    >
-      {/* Cabeçalho */}
-      <View style={styles.cardHeader}>
-        <View
-          style={[
-            styles.iconCircle,
-            { backgroundColor: t('#2F80ED15', '#2F80ED25') },
-          ]}
-        >
-          <Droplet size={26} color={t('#2F80ED', '#60A5FA')} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.cardTitle, { color: t('#111827', '#F9FAFB') }]}>
-            {item.name}
-          </Text>
-          <Text style={[styles.type, { color: t('#6B7280', '#9CA3AF') }]}>
-            {item.water_source_type?.name ?? 'Tipo não informado'}
-          </Text>
-        </View>
-      </View>
+  // const renderItem = ({ item }: { item: WaterSource }) => (
+  //   <TouchableOpacity
+  //     onPress={() => router.push(`/water_sources/details?id=${item.id}`)}
+  //     activeOpacity={0.9}
+  //     style={[
+  //       styles.card,
+  //       {
+  //         borderColor: t('#E5E7EB', '#2E3440'),
+  //         backgroundColor: t('#FFFFFF', '#1E293B'),
+  //         shadowColor: isDark ? 'transparent' : 'rgba(0,0,0,0.05)',
+  //       },
+  //     ]}
+  //   >
+  //     {/* Cabeçalho */}
+  //     <View style={styles.cardHeader}>
+  //       <View
+  //         style={[
+  //           styles.iconCircle,
+  //           { backgroundColor: t('#2F80ED15', '#2F80ED25') },
+  //         ]}
+  //       >
+  //         <Droplet size={26} color={t('#2F80ED', '#60A5FA')} />
+  //       </View>
+  //       <View style={{ flex: 1 }}>
+  //         <Text style={[styles.cardTitle, { color: t('#111827', '#F9FAFB') }]}>
+  //           {item.name}
+  //         </Text>
+  //         <Text style={[styles.type, { color: t('#6B7280', '#9CA3AF') }]}>
+  //           {item.water_source_type?.name ?? 'Tipo não informado'}
+  //         </Text>
+  //       </View>
+  //     </View>
 
-      {/* Descrição */}
-      <Text
-        style={[styles.description, { color: t('#374151', '#D1D5DB') }]}
-        numberOfLines={3}
-      >
-        {item.description}
-      </Text>
+  //     {/* Descrição */}
+  //     <Text
+  //       style={[styles.description, { color: t('#374151', '#D1D5DB') }]}
+  //       numberOfLines={3}
+  //     >
+  //       {item.description}
+  //     </Text>
 
-      {/* Infos adicionais */}
-      <View style={styles.infoBlock}>
-        <View style={styles.infoRow}>
-          <MapPin size={15} color={t('#6B7280', '#9CA3AF')} />
-          <Text style={[styles.infoText, { color: t('#6B7280', '#9CA3AF') }]}>
-            {item.coordinates?.length
-              ? `${item.coordinates[0].latitude}, ${item.coordinates[0].longitude}`
-              : 'Sem coordenadas'}
-          </Text>
-        </View>
-        <View style={styles.infoRow}>
-          <User size={15} color={t('#6B7280', '#9CA3AF')} />
-          <Text style={[styles.infoText, { color: t('#6B7280', '#9CA3AF') }]}>
-            {item.created_by?.name ?? 'Autor desconhecido'}
-          </Text>
-        </View>
-      </View>
+  //     {/* Infos adicionais */}
+  //     <View style={styles.infoBlock}>
+  //       <View style={styles.infoRow}>
+  //         <MapPin size={15} color={t('#6B7280', '#9CA3AF')} />
+  //         <Text style={[styles.infoText, { color: t('#6B7280', '#9CA3AF') }]}>
+  //           {item.coordinates?.length
+  //             ? `${item.coordinates[0].latitude}, ${item.coordinates[0].longitude}`
+  //             : 'Sem coordenadas'}
+  //         </Text>
+  //       </View>
+  //       <View style={styles.infoRow}>
+  //         <User size={15} color={t('#6B7280', '#9CA3AF')} />
+  //         <Text style={[styles.infoText, { color: t('#6B7280', '#9CA3AF') }]}>
+  //           {item.created_by?.name ?? 'Autor desconhecido'}
+  //         </Text>
+  //       </View>
+  //     </View>
 
-      {/* Classe da água */}
-      <View
+  //     {/* Classe da água */}
+  //     <View
+  //       style={[
+  //         styles.badge,
+  //         { backgroundColor: t('#2F80ED10', '#2F80ED20'), borderColor: t('#2F80ED25', '#2F80ED30') },
+  //       ]}
+  //     >
+  //       <Text style={[styles.badgeText, { color: t('#2F80ED', '#60A5FA') }]}>
+  //         Classe: {item.water_class?.water_class ?? 'Indefinida'}
+  //       </Text>
+  //     </View>
+  //   </TouchableOpacity>
+  // );
+
+  const renderItem = ({ item }: { item: WaterSource }) => {
+    // const imageUri =
+    //   item.photo_url ??
+    //   'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png'; // Placeholder elegante
+
+    const imageUri = 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png';
+
+    return (
+      <TouchableOpacity
+        onPress={() => router.push(`/water_sources/details?id=${item.id}`)}
+        activeOpacity={0.9}
         style={[
-          styles.badge,
-          { backgroundColor: t('#2F80ED10', '#2F80ED20'), borderColor: t('#2F80ED25', '#2F80ED30') },
+          styles.card,
+          {
+            borderColor: t('#E5E7EB', '#2E3440'),
+            backgroundColor: t('#FFFFFF', '#1E293B'),
+            shadowColor: isDark ? 'transparent' : 'rgba(0,0,0,0.05)',
+          },
         ]}
       >
-        <Text style={[styles.badgeText, { color: t('#2F80ED', '#60A5FA') }]}>
-          Classe: {item.water_class?.water_class ?? 'Indefinida'}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+        {/* Imagem do manancial */}
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: imageUri }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+          <View style={styles.imageOverlay}>
+            <View
+              style={[
+                styles.iconCircle,
+                { backgroundColor: t('#2F80ED25', '#2F80ED35') },
+              ]}
+            >
+              <Droplet size={22} color={t('#2F80ED', '#60A5FA')} />
+            </View>
+          </View>
+        </View>
+
+        {/* Corpo do card */}
+        <View style={styles.cardBody}>
+          {/* Título e tipo */}
+          <View style={{ marginBottom: 6 }}>
+            <Text
+              style={[styles.cardTitle, { color: t('#111827', '#F9FAFB') }]}
+              numberOfLines={1}
+            >
+              {item.name}
+            </Text>
+            <Text style={[styles.type, { color: t('#6B7280', '#9CA3AF') }]}>
+              {item.water_source_type?.name ?? 'Tipo não informado'}
+            </Text>
+          </View>
+
+          {/* Descrição */}
+          <Text
+            style={[styles.description, { color: t('#374151', '#D1D5DB') }]}
+            numberOfLines={2}
+          >
+            {item.description || 'Sem descrição disponível.'}
+          </Text>
+
+          {/* Infos adicionais */}
+          <View style={styles.infoBlock}>
+            <View style={styles.infoRow}>
+              <MapPin size={15} color={t('#6B7280', '#9CA3AF')} />
+              <Text
+                style={[styles.infoText, { color: t('#6B7280', '#9CA3AF') }]}
+                numberOfLines={1}
+              >
+                {item.coordinates?.length
+                  ? `${item.coordinates[0].latitude.toFixed(4)}, ${item.coordinates[0].longitude.toFixed(4)}`
+                  : 'Sem coordenadas'}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <User size={15} color={t('#6B7280', '#9CA3AF')} />
+              <Text
+                style={[styles.infoText, { color: t('#6B7280', '#9CA3AF') }]}
+                numberOfLines={1}
+              >
+                {item.created_by?.name ?? 'Autor desconhecido'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Classe da água */}
+          <View
+            style={[
+              styles.badge,
+              {
+                backgroundColor: t('#2F80ED10', '#2F80ED25'),
+                borderColor: t('#2F80ED20', '#2F80ED35'),
+              },
+            ]}
+          >
+            <Text style={[styles.badgeText, { color: t('#2F80ED', '#60A5FA') }]}>
+              Classe: {item.water_class?.water_class ?? 'Indefinida'}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
 
   return (
     <View style={[styles.container, { backgroundColor: t('#F9FAFB', '#111827') }]}>
@@ -236,4 +343,28 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   badgeText: { fontSize: 12, fontWeight: '600' },
+
+  // 
+
+  imageContainer: {
+    position: 'relative',
+    width: '100%',
+    height: 150,
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
+    overflow: 'hidden',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  imageOverlay: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+  },
+
+  cardBody: {
+    padding: 14,
+  },
 });
