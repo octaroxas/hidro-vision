@@ -18,6 +18,7 @@ import {
     ScrollView,
     StyleSheet,
     Text,
+    TouchableOpacity,
     View
 } from "react-native";
 import MapView, { LatLng, MapPressEvent, Marker, MarkerDragStartEndEvent, Polygon, PROVIDER_GOOGLE } from "react-native-maps";
@@ -45,8 +46,7 @@ export default function CreateWaterSourceScreen() {
         resolver: zodResolver(schema),
         defaultValues: { water_source_type_id: undefined, created_by: 1, water_class_id: undefined, description: null },
     });
-
-    const { theme, toggleTheme } = useTheme();
+    const { theme } = useTheme();
     const isDark = theme === 'dark';
     const t = (light: string, dark: string) => (isDark ? dark : light);
 
@@ -321,7 +321,22 @@ export default function CreateWaterSourceScreen() {
 
                     {/* Botões */}
                     <View style={styles.buttonsContainer}>
-                        <ButtonP title="Cadastrar" onPress={handleSubmit(onSubmit)} style={{ width: '65%' }} />
+
+                        <TouchableOpacity
+                            onPress={handleSubmit(onSubmit)}
+                            disabled={loading}
+                            style={[
+                                styles.createButton,
+                                { backgroundColor: t('#2F80ED', '#2563EB') },
+                            ]}
+                            activeOpacity={0.9}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="#FFFFFF" />
+                            ) : (
+                                <Text style={styles.createButtonText}>Cadastrar</Text>
+                            )}
+                        </TouchableOpacity>
                         <ButtonP title="Salvar rascunho" variant="outline" style={{ width: '30%' }} />
                     </View>
                 </ScrollView>
@@ -334,6 +349,23 @@ const styles = StyleSheet.create({
     safeArea: { flex: 1 },
     scrollContent: { flexGrow: 1, padding: 24 },
     header: { alignItems: 'center', marginBottom: 32 },
+    createButton: {
+        borderRadius: 14,
+        paddingVertical: 16,
+        alignItems: 'center',
+        marginTop: 8,
+        marginBottom: 24,
+        shadowColor: '#2F80ED',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        elevation: 6,
+    },
+    createButtonText: {
+        color: '#FFFFFF',
+        fontSize: 17,
+        fontWeight: '700',
+    },
     themeButton: {
         position: 'absolute',
         top: 50,
