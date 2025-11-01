@@ -13,7 +13,7 @@ type InputProps = {
 }
 export default function InputPassword({ control, name, placeholder, label, error }: InputProps) {
     const [showPassword, setShowPassword] = useState(true);
-    const { theme, toggleTheme } = useTheme();
+    const { theme } = useTheme();
     const isDark = theme === 'dark';
     const t = (light: string, dark: string) => (isDark ? dark : light);
 
