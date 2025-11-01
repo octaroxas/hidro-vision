@@ -32,12 +32,10 @@ export default function LoginScreen() {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
 
     const { control, handleSubmit, formState: { errors } } = useForm({ resolver: zodResolver(schema) })
-    const { login } = useAuth()
+    const { login, loading } = useAuth()
     useEffect(() => {
     }, []);
 
@@ -131,14 +129,14 @@ export default function LoginScreen() {
                         {/* Botão de login */}
                         <TouchableOpacity
                             onPress={handleSubmit(login)}
-                            disabled={isLoading}
+                            disabled={loading}
                             style={[
                                 styles.loginButton,
                                 { backgroundColor: t('#2F80ED', '#2563EB') },
                             ]}
                             activeOpacity={0.9}
                         >
-                            {isLoading ? (
+                            {loading ? (
                                 <ActivityIndicator color="#FFFFFF" />
                             ) : (
                                 <Text style={styles.loginButtonText}>Entrar</Text>
