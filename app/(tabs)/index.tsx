@@ -1,17 +1,16 @@
 import api from '@/api/Axios';
 import { useTheme } from '@/hooks/useTheme';
 import { router } from '@/router/Router';
-import { Droplet, MapPin, User } from 'lucide-react-native';
+import { MapPin, User } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
 type Coordinate = {
@@ -162,24 +161,6 @@ export default function HomeRoute() {
           },
         ]}
       >
-        {/* Imagem do manancial */}
-        <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: imageUri }}
-            style={styles.image}
-            resizeMode="cover"
-          />
-          <View style={styles.imageOverlay}>
-            <View
-              style={[
-                styles.iconCircle,
-                { backgroundColor: t('#2F80ED25', '#2F80ED35') },
-              ]}
-            >
-              <Droplet size={22} color={t('#2F80ED', '#60A5FA')} />
-            </View>
-          </View>
-        </View>
 
         {/* Corpo do card */}
         <View style={styles.cardBody}>
@@ -212,9 +193,9 @@ export default function HomeRoute() {
                 style={[styles.infoText, { color: t('#6B7280', '#9CA3AF') }]}
                 numberOfLines={1}
               >
-                {item.coordinates?.length
+                {/* {item.coordinates?.length
                   ? `${item.coordinates[0].latitude.toFixed(4)}, ${item.coordinates[0].longitude.toFixed(4)}`
-                  : 'Sem coordenadas'}
+                  : 'Sem coordenadas'} */}
               </Text>
             </View>
             <View style={styles.infoRow}>
@@ -365,6 +346,6 @@ const styles = StyleSheet.create({
   },
 
   cardBody: {
-    padding: 14,
+    // padding: 14,
   },
 });
