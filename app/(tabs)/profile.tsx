@@ -65,7 +65,7 @@ export default function ProfileRoute() {
             </View>
 
             {/* Perfil do usuário */}
-            <View style={styles.profileSection}>
+            {/* <View style={styles.profileSection}>
                 <View style={[styles.profileCard, { backgroundColor: t('#FFFFFF', '#1F2937'), borderWidth: isDark ? 1 : 0, borderColor: isDark ? '#374151' : 'transparent' }]}>
                     <View style={styles.avatarContainer}>
                         <View style={[styles.avatar, { backgroundColor: t('#2F80ED', '#2563EB') }]}>
@@ -84,10 +84,10 @@ export default function ProfileRoute() {
                         </View>
                     </View>
                 </View>
-            </View>
+            </View> */}
 
             {/* Estatísticas */}
-            <View style={styles.statsContainer}>
+            {/* <View style={styles.statsContainer}>
                 <View style={[styles.statBox, { backgroundColor: t('#FFFFFF', '#1F2937'), borderWidth: isDark ? 1 : 0, borderColor: isDark ? '#374151' : 'transparent' }]}>
                     <Text style={[styles.statValue, { color: t('#1F2937', '#F9FAFB') }]}>{stats.totalLists}</Text>
                     <Text style={[styles.statLabel, { color: t('#6B7280', '#9CA3AF') }]}>Listas Criadas</Text>
@@ -98,7 +98,7 @@ export default function ProfileRoute() {
                     </Text>
                     <Text style={[styles.statLabel, { color: t('#6B7280', '#9CA3AF') }]}>Total Gasto</Text>
                 </View>
-            </View>
+            </View> */}
 
             <Modal
                 visible={logoutModalVisible}
