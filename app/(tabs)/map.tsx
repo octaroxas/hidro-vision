@@ -1,6 +1,6 @@
 import { WaterSource } from "@/@types/types";
+import api from "@/api/Axios";
 import { router } from "@/router/Router";
-import axios from "axios";
 import { Droplets, Plus, X } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
@@ -46,9 +46,7 @@ export default function MapRoute() {
   useEffect(() => {
     const loadWaterSources = async () => {
       try {
-        const response = await axios.get(
-          "https://api-mananciais.yuresamarone.shop/api/v1/water-sources"
-        );
+        const response = await api.get("/water-sources");
 
         const formatted = response.data.data.map((item: WaterSource) => ({
           id: item.id,

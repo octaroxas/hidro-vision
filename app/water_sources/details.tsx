@@ -1,7 +1,7 @@
+import api from '@/api/Axios';
 import ButtonP from '@/components/form/Button';
 import { useTheme } from '@/hooks/useTheme';
 import { router } from '@/router/Router';
-import axios from 'axios';
 import { useLocalSearchParams } from 'expo-router';
 import { Droplets } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
@@ -68,9 +68,7 @@ export default function DetailsWaterSourceScreen() {
     useEffect(() => {
         async function getWaterSource() {
             try {
-                const res = await axios.get<{ data: WaterSource }>(
-                    `https://api-mananciais.yuresamarone.shop/api/v1/water-sources/${id}`
-                );
+                const res = await api.get<{ data: WaterSource }>(`/water-sources/${id}`);
                 const ws = res.data.data;
                 setWaterSource({
                     ...ws,
@@ -116,9 +114,7 @@ export default function DetailsWaterSourceScreen() {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await axios.delete(
-                                `https://api-mananciais.yuresamarone.shop/api/v1/water-sources/${id}`
-                            );
+                            await api.delete(`/water-sources/${id}`);
                             Alert.alert('Sucesso', 'Manancial excluído!');
                             router.replace('/(tabs)');
                         } catch {
