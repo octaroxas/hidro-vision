@@ -1,413 +1,353 @@
+import api from '@/api/Axios';
+import ButtonP from '@/components/form/Button';
+import { useTheme } from '@/hooks/useTheme';
+import { router } from '@/router/Router';
+import { useLocalSearchParams } from 'expo-router';
+import { Droplets } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    Image,
+    Linking,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import MapView, { LatLng, Marker, Polygon } from 'react-native-maps';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+const INITIAL_REGION = {
+    latitude: -2.43007,
+    longitude: -54.715307,
+    latitudeDelta: 0.05,
+    longitudeDelta: 0.05,
+};
 
+type WaterSourceType = {
+    id: number;
+    name: string;
+};
 
+type CreatedBy = {
+    id: number;
+    name: string;
+};
 
+type WaterClass = {
+    id: number;
+    water_class: string;
+};
 
+type WaterSource = {
+    id: number;
+    name: string;
+    description: string;
+    water_source_type: WaterSourceType;
+    water_class: WaterClass;
+    created_by: CreatedBy;
+    coordinates: LatLng[];
+    deleted_at: string | null;
+    created_at: string;
+    updated_at: string;
+};
 
+export default function DetailsWaterSourceScreen() {
+    const { id } = useLocalSearchParams();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+    const t = (light: string, dark: string) => (isDark ? dark : light);
 
-// import ButtonP from '@/components/form/Button';
-// import { useTheme } from '@/hooks/useTheme';
-// // import MonitoringList from '@/components/MonitoringList';
-// // import { Colors } from '@/constants/Colors';
-// // import { useAppTheme } from '@/hooks/useAppTheme';
-// import { router } from '@/router/Router';
-// import axios from 'axios';
-// import { useLocalSearchParams } from 'expo-router';
-// import React, { useEffect, useState } from 'react';
-// import { ActivityIndicator, Alert, Dimensions, Image, Linking, StyleSheet, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
-// import MapView, { LatLng, Marker, Polygon } from 'react-native-maps';
-// import { SafeAreaView } from 'react-native-safe-area-context';
+    const [tab, setTab] = useState<'info' | 'map' | 'history'>('info');
+    const [loading, setLoading] = useState(true);
+    const [waterSource, setWaterSource] = useState<WaterSource>();
 
-// const INITIAL_REGION = {
-//     latitude: -2.430070,
-//     longitude: -54.715307,
-//     latitudeDelta: 0.05,
-//     longitudeDelta: 0.05,
-// };
+    useEffect(() => {
+        async function getWaterSource() {
+            try {
+                const res = await api.get<{ data: WaterSource }>(`/water-sources/${id}`);
+                const ws = res.data.data;
+                setWaterSource({
+                    ...ws,
+                    coordinates: ws.coordinates.map((coord: LatLng) => ({
+                        latitude: Number(coord.latitude),
+                        longitude: Number(coord.longitude),
+                    })),
+                });
+            } catch (error) {
+                console.error('Erro ao buscar manancial:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        getWaterSource();
+    }, []);
 
-// type WaterSourceType = {
-//     id: number,
-//     name: string,
-// }
-// type CreatedBy = {
-//     id: number,
-//     name: string
-// }
+    function getPolygonCenter(coordinates: LatLng[]): LatLng {
+        const latSum = coordinates.reduce((sum, c) => sum + c.latitude, 0);
+        const lngSum = coordinates.reduce((sum, c) => sum + c.longitude, 0);
+        return {
+            latitude: latSum / coordinates.length,
+            longitude: lngSum / coordinates.length,
+        };
+    }
 
-// type WaterClass = {
-//     id: number,
-//     water_class: string
-// }
+    const openMaps = async (lat?: number, lng?: number) => {
+        if (!lat || !lng) return;
+        const url = `https://maps.google.com/maps?q=${lat},${lng}`;
+        const supported = await Linking.canOpenURL(url);
+        if (supported) await Linking.openURL(url);
+        else Alert.alert('Erro', 'Não foi possível abrir o Google Maps.');
+    };
 
-// type WaterSource = {
-//     id: number,
-//     name: string,
-//     description: string,
-//     water_source_type: WaterSourceType,
-//     water_class: WaterClass,
-//     created_by: CreatedBy,
-//     coordinates: LatLng[],
-//     deleted_at: string | null;
-//     created_at: string;
-//     updated_at: string;
-// }
+    const destroy = async () => {
+        Alert.alert(
+            'Exclusão de manancial',
+            'Deseja realmente excluir este manancial?',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Excluir',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await api.delete(`/water-sources/${id}`);
+                            Alert.alert('Sucesso', 'Manancial excluído!');
+                            router.replace('/(tabs)');
+                        } catch {
+                            Alert.alert('Erro', 'Não foi possível excluir o manancial.');
+                        }
+                    },
+                },
+            ]
+        );
+    };
 
-// export default function DetailsWaterSourceScreen() {
-//     const { theme } = useTheme();
+    if (loading) {
+        return (
+            <View style={styles.center}>
+                <ActivityIndicator color={t('#2F80ED', '#60A5FA')} size="large" />
+                <Text style={{ color: t('#111827', '#F9FAFB'), marginTop: 10 }}>
+                    Carregando informações...
+                </Text>
+            </View>
+        );
+    }
 
-//     const { id } = useLocalSearchParams();
-//     const [waterSource, setWaterSource] = useState<WaterSource>();
-//     const [tab, setTab] = useState<'info' | 'map' | 'history'>('info');
+    return (
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: t('#F9FAFB', '#111827') }]}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+                {/* Banner */}
+                <Image
+                    source={{
+                        uri:
+                            'https://conceitos.com/wp-content/uploads/ecologia/manancial.jpg',
+                    }}
+                    style={styles.image}
+                    resizeMode="cover"
+                />
 
-//     const [loading, setLoading] = useState<boolean>(true);
+                {/* Header */}
+                <View style={[styles.header, { backgroundColor: t('#FFFFFF', '#1E293B') }]}>
+                    <View style={styles.iconCircle}>
+                        <Droplets size={32} color={t('#2F80ED', '#60A5FA')} />
+                    </View>
+                    <Text style={[styles.title, { color: t('#111827', '#F9FAFB') }]}>
+                        {waterSource?.name}
+                    </Text>
+                    <Text style={[styles.subtitle, { color: t('#6B7280', '#9CA3AF') }]}>
+                        {waterSource?.water_source_type?.name}
+                    </Text>
+                </View>
 
-//     const scheme = useColorScheme();
-//     const isDark = scheme === 'dark';
+                {/* Tabs */}
+                <View style={styles.tabContainer}>
+                    {['info', 'map', 'history'].map((item) => (
+                        <TouchableOpacity
+                            key={item}
+                            onPress={() => setTab(item as any)}
+                            style={[
+                                styles.tab,
+                                tab === item
+                                    ? { backgroundColor: t('#E5E7EB', '#374151') }
+                                    : { backgroundColor: t('#F3F4F6', '#1E293B') },
+                            ]}
+                        >
+                            <Text
+                                style={{
+                                    color: tab === item ? t('#111827', '#F9FAFB') : t('#9CA3AF', '#6B7280'),
+                                    fontWeight: '600',
+                                }}
+                            >
+                                {item === 'info'
+                                    ? 'Informações'
+                                    : item === 'map'
+                                        ? 'Mapa'
+                                        : 'Histórico'}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
 
-//     const styles = StyleSheet.create({
-//         image: {
-//             width: '100%',
-//             height: 300,
-//         },
-//         container: {
-//             padding: 16,
-//         },
-//         card: {
-//             backgroundColor: isDark ? '#1f2937' : '#ffffff',
-//             borderRadius: 12,
-//             marginBottom: 12,
-//             elevation: 1,
-//             shadowColor: '#000',
-//             shadowOffset: { width: 0, height: 2 },
-//             shadowOpacity: 0.1,
-//             shadowRadius: 4,
-//         },
-//         titleContainer: {
-//             display: 'flex',
-//             flexDirection: 'row',
-//             // color: Colors[theme].text,
-//         },
-//         infoLabel: {
-//             // color: Colors[theme].text,
-//             fontWeight: 'bold',
-//             fontSize: 16,
-//         },
-//         title: {
-//             fontSize: 18,
-//             fontWeight: 'bold',
-//             // color: Colors[theme].text,
-//             marginBottom: 4,
-//         },
-//         infoContainer: {
-//             flexDirection: 'row',
-//             justifyContent: 'space-between',
-//         },
-//         description: {
-//             // color: Colors[theme].text,
-//             marginBottom: 8,
-//         },
-//         info: {
-//             fontSize: 16,
-//             // color: Colors[theme].text,
-//             marginBottom: 2,
-//         },
-//         label: {
-//             fontWeight: 'bold',
-//         },
-//         center: {
-//             flex: 1,
-//             justifyContent: 'center',
-//             alignItems: 'center',
-//         },
-//         mapContainer: {
-//             // marginVertical: 20,
-//         },
-//         map: {
-//             height: Dimensions.get('screen').height / 2,
-//         },
-//         base: {
-//             borderRadius: 8,
-//             alignItems: 'center',
-//             justifyContent: 'center',
-//         },
-//         default: {
-//             // backgroundColor: Colors[theme].background,
-//             paddingVertical: 10,
-//             paddingHorizontal: 16,
-//         },
-//         outline: {
-//             borderWidth: 1,
-//             borderColor: isDark ? '#374151' : '#d1d5db',
-//             // backgroundColor: Colors[theme].background,
-//             paddingVertical: 10,
-//             paddingHorizontal: 16,
-//         },
-//         destructive: {
-//             backgroundColor: isDark ? '#b91c1c' : '#fff',
-//             paddingVertical: 10,
-//             paddingHorizontal: 16,
-//         },
-//         disabled: {
-//             opacity: 0.5,
-//         },
-//         sm: {
-//             paddingVertical: 6,
-//             paddingHorizontal: 12,
-//             borderRadius: 6,
-//         },
-//         md: {
-//             paddingVertical: 10,
-//             paddingHorizontal: 16,
-//         },
-//         lg: {
-//             paddingVertical: 14,
-//             paddingHorizontal: 20,
-//             borderRadius: 10,
-//         },
-//         textBase: {
-//             fontSize: 14,
-//             fontWeight: '500',
-//         },
-//         textDefault: {
-//             // color: Colors[theme].text,
-//         },
-//         textOutline: {
-//             color: isDark ? '#f9fafb' : '#000',
-//         },
-//         tab: {
-//             borderRadius: 10,
-//             alignItems: 'center',
-//             justifyContent: 'center',
-//             paddingVertical: 10,
-//             paddingHorizontal: 16,
-//             marginBottom: 5
-//         },
-//         tabTextActive: {
-//             color: isDark ? '#fff' : '#111827',
-//         },
-//         tabTextInactive: {
-//             color: '#a9a9a9ff',
-//         },
-//         tabActive: {
-//             backgroundColor: isDark ? '#111827' : '#f3f4f6',
-//         },
-//         tabInactive: {
-//             backgroundColor: theme === 'dark' ? 'black' : '#f1f1f1f1',
-//         }
-//     });
-//     useEffect(() => {
-//         async function getWaterSources() {
-//             try {
-//                 const res = await axios.get<{
-//                     data: WaterSource;
-//                 }>(
-//                     `https://api-mananciais.yuresamarone.shop/api/v1/water-sources/${id}`
-//                 );
-//                 setWaterSource({
-//                     id: res.data.data.id,
-//                     name: res.data.data.name,
-//                     description: res.data.data.description,
-//                     water_source_type: res.data.data.water_source_type,
-//                     water_class: res.data.data.water_class,
-//                     created_by: res.data.data.created_by,
-//                     coordinates: res.data.data.coordinates.map((coord: LatLng) => ({
-//                         latitude: Number(coord.latitude),
-//                         longitude: Number(coord.longitude),
-//                     })),
-//                     deleted_at: res.data.data.deleted_at,
-//                     created_at: res.data.data.created_at,
-//                     updated_at: res.data.data.updated_at
-//                 });
-//             } catch (error) {
-//                 console.error('Erro ao buscar mananciais:', error);
-//             } finally {
-//                 setLoading(false);
-//             }
-//         }
+                {/* Conteúdo */}
+                <View style={[styles.card, { backgroundColor: t('#FFFFFF', '#1E293B'), borderColor: t('#E5E7EB', '#374151') }]}>
+                    {tab === 'info' && (
+                        <View>
+                            <Text style={[styles.label, { color: t('#6B7280', '#9CA3AF') }]}>Classe hídrica</Text>
+                            <Text style={[styles.info, { color: t('#111827', '#F9FAFB') }]}>
+                                {waterSource?.water_class?.water_class}
+                            </Text>
 
-//         getWaterSources();
-//     }, []);
+                            <Text style={[styles.label, { color: t('#6B7280', '#9CA3AF') }]}>Cadastrado por</Text>
+                            <Text style={[styles.info, { color: t('#111827', '#F9FAFB') }]}>
+                                {waterSource?.created_by?.name}
+                            </Text>
 
-//     if (loading) {
-//         return (
-//             <View style={styles.center}>
-//                 <ActivityIndicator size="large" />
-//                 <Text>Carregando mananciais...</Text>
-//             </View>
-//         );
-//     }
+                            <Text style={[styles.label, { color: t('#6B7280', '#9CA3AF') }]}>Descrição</Text>
+                            <Text style={[styles.info, { color: t('#374151', '#D1D5DB') }]}>
+                                {waterSource?.description || 'Sem descrição disponível.'}
+                            </Text>
 
-//     const destroy = async () => {
-//         try {
-//             const res = await axios.delete(
-//                 `https://api-mananciais.yuresamarone.shop/api/v1/water-sources/${id}`
-//             );
-//             alert('Manancial excluído');
-//             router.replace('/(tabs)')
-//         } catch (error) {
-//             console.error('Erro ao buscar mananciais:', error);
-//         } finally {
-//             setLoading(false);
-//         }
-//     }
-//     function getPolygonCenter(coordinates: LatLng[]): LatLng {
-//         const latSum = coordinates.reduce((sum, coord) => sum + coord.latitude, 0);
-//         const lngSum = coordinates.reduce((sum, coord) => sum + coord.longitude, 0);
-//         return {
-//             latitude: latSum / coordinates.length,
-//             longitude: lngSum / coordinates.length,
-//         };
-//     }
+                            <View style={styles.buttonRow}>
+                                <ButtonP
+                                    size="sm"
+                                    title="Abrir com Maps"
+                                    onPress={() =>
+                                        openMaps(
+                                            waterSource?.coordinates[0]?.latitude,
+                                            waterSource?.coordinates[0]?.longitude
+                                        )
+                                    }
+                                />
+                                <ButtonP
+                                    size="sm"
+                                    variant="outline"
+                                    title="Excluir"
+                                    onPress={destroy}
+                                />
+                            </View>
+                        </View>
+                    )}
 
-//     const openMaps = async (lat: any, lng: any) => {
-//         const url = `https://maps.google.com/maps?q=${lat},${lng}`;
-//         const supported = await Linking.canOpenURL(url);
-//         if (supported) {
-//             await Linking.openURL(url);
-//         } else {
-//             console.warn('Cannot open URL:', url);
-//         }
-//     };
+                    {tab === 'map' && (
+                        <View style={styles.mapContainer}>
+                            <MapView
+                                style={styles.map}
+                                initialRegion={
+                                    waterSource?.coordinates?.length
+                                        ? {
+                                            ...getPolygonCenter(waterSource.coordinates),
+                                            latitudeDelta: 0.02,
+                                            longitudeDelta: 0.02,
+                                        }
+                                        : INITIAL_REGION
+                                }
+                            >
+                                {waterSource?.coordinates && (
+                                    <Polygon
+                                        coordinates={waterSource.coordinates}
+                                        strokeColor="#2563EB"
+                                        fillColor="rgba(37,99,235,0.3)"
+                                        strokeWidth={2}
+                                    />
+                                )}
+                                {waterSource && (
+                                    <Marker
+                                        title={waterSource.name}
+                                        coordinate={getPolygonCenter(waterSource.coordinates)}
+                                    />
+                                )}
+                            </MapView>
+                        </View>
+                    )}
 
+                    {tab === 'history' && (
+                        <View style={styles.historyContainer}>
+                            <Text style={{ color: t('#6B7280', '#9CA3AF') }}>
+                                Histórico de monitoramento ainda não disponível.
+                            </Text>
+                        </View>
+                    )}
+                </View>
+            </ScrollView>
+        </SafeAreaView>
+    );
+}
 
-//     return (
-//         <SafeAreaView>
-//             <Image
-//                 source={{ uri: "https://conceitos.com/wp-content/uploads/ecologia/manancial.jpg" }}
-//                 style={styles.image}
-//                 resizeMode="cover"
-//             />
-
-//             <View style={{ display: 'flex', gap: 5, flexDirection: 'row', paddingTop: 10, paddingHorizontal: 10 }}>
-//                 <TouchableOpacity
-//                     style={[styles.tab, tab === 'info' ? styles.tabActive : styles.tabInactive]}
-//                     onPress={() => setTab('info')}
-//                 >
-//                     <Text style={[tab === 'info' ? styles.tabTextActive : styles.tabTextInactive]}>Informações</Text>
-//                 </TouchableOpacity>
-
-//                 <TouchableOpacity
-//                     style={[styles.tab, tab === 'map' ? styles.tabActive : styles.tabInactive]}
-//                     onPress={() => setTab('map')}
-//                 >
-//                     <Text style={[tab === 'map' ? styles.tabTextActive : styles.tabTextInactive]}>Mapa</Text>
-//                 </TouchableOpacity>
-
-//                 <TouchableOpacity
-//                     style={[styles.tab, tab === 'history' ? styles.tabActive : styles.tabInactive]}
-//                     onPress={() => setTab('history')}
-//                 >
-//                     <Text style={[tab === 'history' ? styles.tabTextActive : styles.tabTextInactive]}>Histórico</Text>
-//                 </TouchableOpacity>
-//             </View>
-
-//             <View style={{ marginHorizontal: 10, borderTopLeftRadius: 0, borderTopRightRadius: 10, borderBottomRightRadius: 10, borderBottomLeftRadius: 10, }}>
-
-//                 {tab === 'info' && (
-//                     <View style={{ paddingHorizontal: 16 }}>
-//                         {waterSource && (
-//                             <View style={{ paddingVertical: 10 }}>
-//                                 <View style={styles.titleContainer}>
-//                                     <Text style={styles.title}>{waterSource.name}</Text>
-//                                 </View>
-//                                 <View style={styles.infoContainer}>
-//                                     <Text style={styles.infoLabel}>Tipo</Text>
-//                                     <Text style={styles.info}>{waterSource.water_source_type.name}</Text>
-//                                 </View>
-
-//                                 <View style={styles.infoContainer}>
-//                                     <Text style={styles.infoLabel}>Classe</Text>
-//                                     <Text style={styles.info}>Classe {waterSource.water_class.water_class}</Text>
-//                                 </View>
-
-//                                 <View style={styles.infoContainer}>
-//                                     <Text style={styles.infoLabel}>Cadastrado por</Text>
-//                                     <Text style={styles.info}>{waterSource.created_by.name}</Text>
-//                                 </View>
-
-//                                 <View style={styles.infoContainer}>
-//                                     <Text style={styles.infoLabel}>Descrição</Text>
-//                                     <Text style={styles.info}>{waterSource.description ?? null}</Text>
-//                                 </View>
-//                             </View>
-//                         )}
-
-//                         <View style={{ display: 'flex', gap: 5, flexDirection: 'row-reverse', padding: 5 }}>
-//                             <ButtonP
-//                                 size='sm'
-//                                 loading={false}
-//                                 disabled={false}
-//                                 title='Abrir com Maps'
-//                                 onPress={() => openMaps(waterSource?.coordinates[0].latitude, waterSource?.coordinates[0].longitude)}
-//                             />
-//                             <ButtonP
-//                                 disabled={false}
-//                                 loading={false}
-//                                 size='sm'
-//                                 title='Excluir'
-//                                 onPress={() => Alert.alert(
-//                                     'Exclusão de manancial!',
-//                                     'Deseja realmente excluí-lo?',
-//                                     [
-//                                         { text: 'Cancelar', style: 'cancel' },
-//                                         {
-//                                             text: 'Excluir',
-//                                             onPress: () => {
-//                                                 destroy()
-//                                                 Alert.alert('Exclusão de manancial', 'O manancial foi excluído!')
-//                                             },
-//                                             style: 'destructive'
-//                                         }
-//                                     ],
-//                                     { cancelable: true }
-//                                 )}
-//                             />
-//                             {/* <ButtonP
-//                                 disabled={false}
-//                                 loading={false}
-//                                 size='sm'
-//                                 title='Editar'
-//                                 onPress={() => Alert.alert('Edição de manancial')}
-//                             /> */}
-//                         </View>
-//                     </View>
-//                 )}
-
-//                 {tab === 'history' && (
-//                     <View style={{ padding: 10 }}>
-//                         {/* <MonitoringList waterSourceId={id} /> */}
-//                     </View>
-//                 )}
-
-//                 {tab === 'map' && (
-//                     <View style={styles.mapContainer}>
-//                         <MapView
-//                             style={styles.map}
-//                             initialRegion={INITIAL_REGION}>
-//                             {
-//                                 waterSource?.coordinates &&
-//                                 <Polygon
-//                                     key={waterSource?.created_at}
-//                                     coordinates={waterSource?.coordinates}
-//                                     strokeColor="#FF0000"
-//                                     fillColor="rgba(255,0,0,0.3)"
-//                                     strokeWidth={2}
-//                                 />
-//                             }
-
-//                             {
-//                                 waterSource && (
-//                                     <Marker
-//                                         title={`${waterSource.name}`}
-//                                         coordinate={getPolygonCenter(waterSource.coordinates)}
-//                                     >
-//                                     </Marker>
-//                                 )
-//                             }
-//                         </MapView>
-//                     </View>
-//                 )}
-//             </View>
-//         </SafeAreaView >
-//     );
-// }
+const styles = StyleSheet.create({
+    safeArea: { flex: 1 },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    image: { width: '100%', height: 250 },
+    header: {
+        alignItems: 'center',
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+    },
+    iconCircle: {
+        backgroundColor: 'rgba(37,99,235,0.1)',
+        borderRadius: 40,
+        padding: 12,
+        marginBottom: 10,
+    },
+    title: {
+        fontSize: 22,
+        fontWeight: '800',
+        textAlign: 'center',
+    },
+    subtitle: { fontSize: 14, textAlign: 'center', marginTop: 4 },
+    tabContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        paddingVertical: 10,
+        marginHorizontal: 10,
+    },
+    tab: {
+        flex: 1,
+        alignItems: 'center',
+        borderRadius: 10,
+        marginHorizontal: 5,
+        paddingVertical: 10,
+    },
+    card: {
+        borderRadius: 16,
+        borderWidth: 1,
+        margin: 12,
+        padding: 16,
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+        elevation: 2,
+    },
+    label: {
+        fontSize: 13,
+        fontWeight: '600',
+        marginTop: 12,
+    },
+    info: {
+        fontSize: 15,
+        fontWeight: '500',
+        marginBottom: 8,
+    },
+    buttonRow: {
+        flexDirection: 'row-reverse',
+        justifyContent: 'flex-start',
+        gap: 10,
+        marginTop: 12,
+    },
+    mapContainer: {
+        borderRadius: 12,
+        overflow: 'hidden',
+        marginTop: 12,
+    },
+    map: {
+        height: Dimensions.get('window').height * 0.35,
+        width: '100%',
+    },
+    historyContainer: {
+        alignItems: 'center',
+        padding: 20,
+    },
+});
