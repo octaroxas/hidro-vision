@@ -3,7 +3,7 @@ import ButtonP from '@/components/form/Button';
 import { useTheme } from '@/hooks/useTheme';
 import { router } from '@/router/Router';
 import { useLocalSearchParams } from 'expo-router';
-import { Droplets, Plus, X } from 'lucide-react-native';
+import { Droplets, FileText, Info, Map as MapIcon, Plus, User, X } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -132,9 +132,9 @@ export default function DetailsWaterSourceScreen() {
 
     if (loading) {
         return (
-            <View style={styles.center}>
+            <View style={[styles.center, { backgroundColor: t('#F9FAFB', '#111827') }]}>
                 <ActivityIndicator color={t('#2F80ED', '#60A5FA')} size="large" />
-                <Text style={{ color: t('#111827', '#F9FAFB'), marginTop: 10 }}>
+                <Text style={{ color: t('#6B7280', '#9CA3AF'), marginTop: 12, fontWeight: '500' }}>
                     Carregando informações...
                 </Text>
             </View>
@@ -143,99 +143,129 @@ export default function DetailsWaterSourceScreen() {
 
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor: t('#F9FAFB', '#111827') }]}>
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
                 {/* Banner */}
-                <Image
-                    source={{
-                        uri:
-                            'https://conceitos.com/wp-content/uploads/ecologia/manancial.jpg',
-                    }}
-                    style={styles.image}
-                    resizeMode="cover"
-                />
+                <View style={styles.imageContainer}>
+                    <Image
+                        source={{
+                            uri: 'https://conceitos.com/wp-content/uploads/ecologia/manancial.jpg',
+                        }}
+                        style={styles.image}
+                        resizeMode="cover"
+                    />
+                    <View style={[styles.imageOverlay, { backgroundColor: isDark ? 'rgba(17,24,39,0.4)' : 'transparent' }]} />
+                </View>
 
-                {/* Header */}
-                <View style={[styles.header, { backgroundColor: t('#FFFFFF', '#1E293B') }]}>
-                    <View style={styles.iconCircle}>
-                        <Droplets size={32} color={t('#2F80ED', '#60A5FA')} />
+                {/* Header (Sobreposto à imagem) */}
+                <View style={[styles.header, { backgroundColor: t('#FFFFFF', '#1E293B'), borderColor: t('#E5E7EB', '#374151') }]}>
+                    <View style={[styles.iconCircle, { backgroundColor: t('#E0E7FF', 'rgba(96,165,250,0.15)'), borderColor: t('#FFFFFF', '#1E293B') }]}>
+                        <Droplets size={34} color={t('#2F80ED', '#60A5FA')} />
                     </View>
                     <Text style={[styles.title, { color: t('#111827', '#F9FAFB') }]}>
                         {waterSource?.name}
                     </Text>
-                    <Text style={[styles.subtitle, { color: t('#6B7280', '#9CA3AF') }]}>
-                        {waterSource?.water_source_type?.name}
-                    </Text>
+                    <View style={styles.badge}>
+                        <Info size={14} color={t('#6B7280', '#9CA3AF')} style={{ marginRight: 4 }} />
+                        <Text style={[styles.subtitle, { color: t('#6B7280', '#9CA3AF') }]}>
+                            {waterSource?.water_source_type?.name}
+                        </Text>
+                    </View>
                 </View>
 
                 {/* Tabs */}
-                <View style={styles.tabContainer}>
+                <View style={[styles.tabContainer, { backgroundColor: t('#F3F4F6', '#1E293B') }]}>
                     {['info', 'map', 'history'].map((item) => (
                         <TouchableOpacity
                             key={item}
+                            activeOpacity={0.7}
                             onPress={() => setTab(item as any)}
                             style={[
                                 styles.tab,
-                                tab === item
-                                    ? { backgroundColor: t('#E5E7EB', '#374151') }
-                                    : { backgroundColor: t('#F3F4F6', '#1E293B') },
+                                tab === item && {
+                                    backgroundColor: t('#FFFFFF', '#374151'),
+                                    ...styles.tabActiveShadow
+                                }
                             ]}
                         >
                             <Text
                                 style={{
-                                    color: tab === item ? t('#111827', '#F9FAFB') : t('#9CA3AF', '#6B7280'),
-                                    fontWeight: '600',
+                                    color: tab === item ? t('#2F80ED', '#60A5FA') : t('#6B7280', '#9CA3AF'),
+                                    fontWeight: tab === item ? '700' : '500',
+                                    fontSize: 14,
                                 }}
                             >
-                                {item === 'info'
-                                    ? 'Informações'
-                                    : item === 'map'
-                                        ? 'Mapa'
-                                        : 'Histórico'}
+                                {item === 'info' ? 'Informações' : item === 'map' ? 'Mapa' : 'Histórico'}
                             </Text>
                         </TouchableOpacity>
                     ))}
                 </View>
 
-                {/* Conteúdo */}
-                <View style={[styles.card, { backgroundColor: t('#FFFFFF', '#1E293B'), borderColor: t('#E5E7EB', '#374151') }]}>
+                {/* Conteúdo Dinâmico */}
+                <View style={[styles.card, { backgroundColor: t('#FFFFFF', '#1E293B'), borderColor: t('#F3F4F6', '#374151') }]}>
+
+                    {/* ABA: INFORMAÇÕES */}
                     {tab === 'info' && (
-                        <View>
-                            <Text style={[styles.label, { color: t('#6B7280', '#9CA3AF') }]}>Classe hídrica</Text>
-                            <Text style={[styles.info, { color: t('#111827', '#F9FAFB') }]}>
-                                {waterSource?.water_class?.water_class}
-                            </Text>
+                        <View style={styles.infoContent}>
+                            <View style={[styles.infoRow, { borderBottomColor: t('#F3F4F6', '#374151') }]}>
+                                <View style={[styles.infoIconWrapper, { backgroundColor: t('#F0F9FF', 'rgba(56,189,248,0.1)') }]}>
+                                    <Droplets size={20} color={t('#0284C7', '#38BDF8')} />
+                                </View>
+                                <View style={styles.infoTextWrapper}>
+                                    <Text style={[styles.label, { color: t('#6B7280', '#9CA3AF') }]}>Classe hídrica</Text>
+                                    <Text style={[styles.info, { color: t('#111827', '#F9FAFB') }]}>
+                                        {waterSource?.water_class?.water_class}
+                                    </Text>
+                                </View>
+                            </View>
 
-                            <Text style={[styles.label, { color: t('#6B7280', '#9CA3AF') }]}>Cadastrado por</Text>
-                            <Text style={[styles.info, { color: t('#111827', '#F9FAFB') }]}>
-                                {waterSource?.created_by?.name}
-                            </Text>
+                            <View style={[styles.infoRow, { borderBottomColor: t('#F3F4F6', '#374151') }]}>
+                                <View style={[styles.infoIconWrapper, { backgroundColor: t('#F3F4F6', 'rgba(156,163,175,0.1)') }]}>
+                                    <User size={20} color={t('#4B5563', '#9CA3AF')} />
+                                </View>
+                                <View style={styles.infoTextWrapper}>
+                                    <Text style={[styles.label, { color: t('#6B7280', '#9CA3AF') }]}>Cadastrado por</Text>
+                                    <Text style={[styles.info, { color: t('#111827', '#F9FAFB') }]}>
+                                        {waterSource?.created_by?.name}
+                                    </Text>
+                                </View>
+                            </View>
 
-                            <Text style={[styles.label, { color: t('#6B7280', '#9CA3AF') }]}>Descrição</Text>
-                            <Text style={[styles.info, { color: t('#374151', '#D1D5DB') }]}>
-                                {waterSource?.description || 'Sem descrição disponível.'}
-                            </Text>
+                            <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
+                                <View style={[styles.infoIconWrapper, { backgroundColor: t('#FEF3C7', 'rgba(251,191,36,0.1)') }]}>
+                                    <FileText size={20} color={t('#D97706', '#FBBF24')} />
+                                </View>
+                                <View style={styles.infoTextWrapper}>
+                                    <Text style={[styles.label, { color: t('#6B7280', '#9CA3AF') }]}>Descrição</Text>
+                                    <Text style={[styles.info, { color: t('#374151', '#D1D5DB') }]}>
+                                        {waterSource?.description || 'Nenhuma descrição detalhada foi fornecida para este manancial.'}
+                                    </Text>
+                                </View>
+                            </View>
 
-                            <View style={styles.buttonRow}>
-                                <ButtonP
-                                    size="sm"
-                                    title="Abrir com Maps"
-                                    onPress={() =>
-                                        openMaps(
-                                            waterSource?.coordinates[0]?.latitude,
-                                            waterSource?.coordinates[0]?.longitude
-                                        )
-                                    }
-                                />
-                                <ButtonP
-                                    size="sm"
-                                    variant="outline"
-                                    title="Excluir"
-                                    onPress={destroy}
-                                />
+                            <View style={styles.actionButtons}>
+                                <View style={styles.buttonWrapper}>
+                                    <ButtonP
+                                        title="Excluir"
+                                        variant="outline"
+                                        onPress={destroy}
+                                    />
+                                </View>
+                                <View style={styles.buttonWrapper}>
+                                    <ButtonP
+                                        title="Abrir no Maps"
+                                        onPress={() =>
+                                            openMaps(
+                                                waterSource?.coordinates[0]?.latitude,
+                                                waterSource?.coordinates[0]?.longitude
+                                            )
+                                        }
+                                    />
+                                </View>
                             </View>
                         </View>
                     )}
 
+                    {/* ABA: MAPA */}
                     {tab === 'map' && (
                         <View style={styles.mapContainer}>
                             <MapView
@@ -268,16 +298,26 @@ export default function DetailsWaterSourceScreen() {
                         </View>
                     )}
 
+                    {/* ABA: HISTÓRICO */}
                     {tab === 'history' && (
                         <View style={styles.historyContainer}>
-                            <Text style={{ color: t('#6B7280', '#9CA3AF') }}>
-                                Histórico de monitoramento ainda não disponível.
+                            <View style={[styles.emptyStateIcon, { backgroundColor: t('#F3F4F6', '#374151') }]}>
+                                <MapIcon size={32} color={t('#9CA3AF', '#6B7280')} />
+                            </View>
+                            <Text style={[styles.emptyStateText, { color: t('#6B7280', '#9CA3AF') }]}>
+                                O histórico de monitoramento ainda não está disponível para este manancial.
                             </Text>
-                            <ButtonP onPress={() => setModalVisible(true)}>
-                                <Plus color={'white'} />
-                                <Text>Novo Monitoramento</Text>
-                            </ButtonP>
 
+                            <View style={{ width: '100%', marginTop: 20 }}>
+                                <ButtonP onPress={() => setModalVisible(true)}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                        <Plus color={'white'} size={20} />
+                                        <Text style={{ color: 'white', fontWeight: 'bold' }}>Novo Monitoramento</Text>
+                                    </View>
+                                </ButtonP>
+                            </View>
+
+                            {/* MODAL MANTIDO COM ESTILIZAÇÃO ORIGINAL */}
                             <Modal
                                 visible={modalVisible}
                                 animationType="slide"
@@ -294,6 +334,11 @@ export default function DetailsWaterSourceScreen() {
                                             { backgroundColor: t('#FFFFFF', '#1F2937') },
                                         ]}
                                     >
+                                        {/* Pequeno indicador de arraste (notch) para modals modernos */}
+                                        <View style={styles.modalNotchContainer}>
+                                            <View style={[styles.modalNotch, { backgroundColor: t('#E5E7EB', '#4B5563') }]} />
+                                        </View>
+
                                         <View
                                             style={[
                                                 styles.modalHeader,
@@ -304,13 +349,16 @@ export default function DetailsWaterSourceScreen() {
                                                 Registrar Monitoramento
                                             </Text>
                                             <TouchableOpacity
-                                                onPress={() => {
-                                                    setModalVisible(false);
-                                                }}
+                                                onPress={() => setModalVisible(false)}
                                                 style={styles.closeButton}
                                             >
                                                 <X size={24} color={t('#6B7280', '#9CA3AF')} />
                                             </TouchableOpacity>
+                                        </View>
+
+                                        {/* Espaço reservado para o form mantendo os estilos base */}
+                                        <View style={styles.modalContent}>
+                                            {/* Formulário virá aqui */}
                                         </View>
                                     </View>
                                 </KeyboardAvoidingView>
@@ -326,101 +374,183 @@ export default function DetailsWaterSourceScreen() {
 const styles = StyleSheet.create({
     safeArea: { flex: 1 },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    image: { width: '100%', height: 250 },
+
+    // Header & Banner
+    imageContainer: { width: '100%', height: 220, position: 'relative' },
+    image: { width: '100%', height: '100%' },
+    imageOverlay: { ...StyleSheet.absoluteFillObject },
     header: {
         alignItems: 'center',
-        paddingVertical: 16,
-        borderBottomWidth: 1,
+        paddingHorizontal: 20,
+        paddingBottom: 24,
+        paddingTop: 0,
+        marginHorizontal: 16,
+        marginTop: -40, // Sobrepõe a imagem levemente
+        borderRadius: 20,
+        borderWidth: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        elevation: 3,
     },
     iconCircle: {
-        backgroundColor: 'rgba(37,99,235,0.1)',
-        borderRadius: 40,
-        padding: 12,
-        marginBottom: 10,
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: -36, // Metade para fora do card
+        marginBottom: 12,
+        borderWidth: 4,
     },
     title: {
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: '800',
         textAlign: 'center',
+        marginBottom: 6,
     },
-    subtitle: { fontSize: 14, textAlign: 'center', marginTop: 4 },
+    badge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        backgroundColor: 'transparent',
+    },
+    subtitle: { fontSize: 14, fontWeight: '600' },
+
+    // Tabs
     tabContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
-        paddingVertical: 10,
-        marginHorizontal: 10,
+        borderRadius: 12,
+        marginHorizontal: 16,
+        marginTop: 24,
+        padding: 4,
     },
     tab: {
         flex: 1,
         alignItems: 'center',
-        borderRadius: 10,
-        marginHorizontal: 5,
-        paddingVertical: 10,
+        paddingVertical: 12,
+        borderRadius: 8,
     },
-    card: {
-        borderRadius: 16,
-        borderWidth: 1,
-        margin: 12,
-        padding: 16,
+    tabActiveShadow: {
         shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
         elevation: 2,
     },
+
+    // Content Card
+    card: {
+        borderRadius: 20,
+        borderWidth: 1,
+        marginHorizontal: 16,
+        marginTop: 16,
+        overflow: 'hidden',
+    },
+
+    // Info Tab Layout
+    infoContent: { padding: 20 },
+    infoRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+    },
+    infoIconWrapper: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    infoTextWrapper: { flex: 1, justifyContent: 'center' },
     label: {
         fontSize: 13,
         fontWeight: '600',
-        marginTop: 12,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        marginBottom: 4,
     },
     info: {
-        fontSize: 15,
+        fontSize: 16,
         fontWeight: '500',
-        marginBottom: 8,
+        lineHeight: 22,
     },
-    buttonRow: {
-        flexDirection: 'row-reverse',
-        justifyContent: 'flex-start',
-        gap: 10,
-        marginTop: 12,
+
+    // Botões info
+    actionButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 24,
+        gap: 12,
     },
-    mapContainer: {
-        borderRadius: 12,
-        overflow: 'hidden',
-        marginTop: 12,
-    },
-    map: {
-        height: Dimensions.get('window').height * 0.35,
-        width: '100%',
-    },
+    buttonWrapper: { flex: 1 },
+
+    // Map Tab
+    mapContainer: { width: '100%', height: Dimensions.get('window').height * 0.45 },
+    map: { width: '100%', height: '100%' },
+
+    // History Tab
     historyContainer: {
         alignItems: 'center',
-        padding: 20,
+        padding: 32,
     },
-    //modal
+    emptyStateIcon: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    emptyStateText: {
+        textAlign: 'center',
+        fontSize: 15,
+        lineHeight: 22,
+        marginBottom: 10,
+    },
+
+    // Modal
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'flex-end',
     },
     modalContainer: {
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        paddingBottom: 40,
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
+        paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+    },
+    modalNotchContainer: {
+        alignItems: 'center',
+        paddingTop: 12,
+        paddingBottom: 4,
+    },
+    modalNotch: {
+        width: 40,
+        height: 5,
+        borderRadius: 3,
     },
     modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 20,
+        paddingHorizontal: 24,
+        paddingVertical: 16,
         borderBottomWidth: 1,
     },
     modalTitle: { fontSize: 20, fontWeight: '700' },
     closeButton: { padding: 4 },
-    modalContent: { padding: 20 },
+    modalContent: { padding: 24 },
     inputLabel: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
     input: {
         borderWidth: 1,
-        borderRadius: 8,
+        borderRadius: 10,
         padding: 14,
         fontSize: 16,
         marginBottom: 20,
