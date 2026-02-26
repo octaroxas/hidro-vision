@@ -3,14 +3,17 @@ import ButtonP from '@/components/form/Button';
 import { useTheme } from '@/hooks/useTheme';
 import { router } from '@/router/Router';
 import { useLocalSearchParams } from 'expo-router';
-import { Droplets } from 'lucide-react-native';
+import { Droplets, Plus, X } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
     Dimensions,
     Image,
+    KeyboardAvoidingView,
     Linking,
+    Modal,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -64,6 +67,7 @@ export default function DetailsWaterSourceScreen() {
     const [tab, setTab] = useState<'info' | 'map' | 'history'>('info');
     const [loading, setLoading] = useState(true);
     const [waterSource, setWaterSource] = useState<WaterSource>();
+    const [modalVisible, setModalVisible] = useState(false);
 
     useEffect(() => {
         async function getWaterSource() {
@@ -269,6 +273,48 @@ export default function DetailsWaterSourceScreen() {
                             <Text style={{ color: t('#6B7280', '#9CA3AF') }}>
                                 Histórico de monitoramento ainda não disponível.
                             </Text>
+                            <ButtonP onPress={() => setModalVisible(true)}>
+                                <Plus color={'white'} />
+                                <Text>Novo Monitoramento</Text>
+                            </ButtonP>
+
+                            <Modal
+                                visible={modalVisible}
+                                animationType="slide"
+                                transparent
+                                onRequestClose={() => setModalVisible(false)}
+                            >
+                                <KeyboardAvoidingView
+                                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                                    style={styles.modalOverlay}
+                                >
+                                    <View
+                                        style={[
+                                            styles.modalContainer,
+                                            { backgroundColor: t('#FFFFFF', '#1F2937') },
+                                        ]}
+                                    >
+                                        <View
+                                            style={[
+                                                styles.modalHeader,
+                                                { borderBottomColor: t('#E5E7EB', '#374151') },
+                                            ]}
+                                        >
+                                            <Text style={[styles.modalTitle, { color: t('#1F2937', '#F9FAFB') }]}>
+                                                Registrar Monitoramento
+                                            </Text>
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    setModalVisible(false);
+                                                }}
+                                                style={styles.closeButton}
+                                            >
+                                                <X size={24} color={t('#6B7280', '#9CA3AF')} />
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                </KeyboardAvoidingView>
+                            </Modal>
                         </View>
                     )}
                 </View>
@@ -350,4 +396,39 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 20,
     },
+    //modal
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContainer: {
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        paddingBottom: 40,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 20,
+        borderBottomWidth: 1,
+    },
+    modalTitle: { fontSize: 20, fontWeight: '700' },
+    closeButton: { padding: 4 },
+    modalContent: { padding: 20 },
+    inputLabel: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
+    input: {
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: 14,
+        fontSize: 16,
+        marginBottom: 20,
+    },
+    createButton: {
+        borderRadius: 12,
+        padding: 16,
+        alignItems: 'center',
+    },
+    createButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
 });
