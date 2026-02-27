@@ -61,6 +61,12 @@ export type FormWaterSource = {
     water_class_id: number
 };
 
+export type FormMonitoring = {
+    description: string;
+    water_source_id: number;
+    user_id: number;
+};
+
 // export  type WaterSourceType = {
 //     id: number,
 //     name: string,

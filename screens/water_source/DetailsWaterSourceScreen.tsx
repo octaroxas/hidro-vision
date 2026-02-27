@@ -1,8 +1,10 @@
 import api from '@/api/Axios';
 import ButtonP from '@/components/form/Button';
+import Input from '@/components/form/Input';
 import ActionModal from '@/components/ui/action-modal';
 import { useTheme } from '@/hooks/useTheme';
 import { router } from '@/router/Router';
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocalSearchParams } from 'expo-router';
 import { Droplets, FileText, Info, Map as MapIcon, Plus, User } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
@@ -12,7 +14,6 @@ import {
     Dimensions,
     Image,
     Linking,
-    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -57,6 +58,15 @@ type WaterSource = {
     updated_at: string;
 };
 
+import { FormMonitoring } from '@/@types/types';
+import { isAxiosError } from 'axios';
+import { useForm } from 'react-hook-form';
+import { z } from "zod";
+const schema = z.object({
+    description: z.string(),
+    water_source_id: z.number({ required_error: 'O ID do manancial é obrigatório!' }),
+    user_id: z.number(),
+});
 export default function DetailsWaterSourceScreen() {
     const { id } = useLocalSearchParams();
     const { theme } = useTheme();
@@ -65,6 +75,10 @@ export default function DetailsWaterSourceScreen() {
 
     const [tab, setTab] = useState<'info' | 'map' | 'history'>('info');
     const [loading, setLoading] = useState(true);
+    const { control, handleSubmit, formState: { errors } } = useForm<FormMonitoring>({
+        resolver: zodResolver(schema),
+        defaultValues: { water_source_id: Number(id), user_id: 1, description: '' },
+    });
     const [waterSource, setWaterSource] = useState<WaterSource>();
     const [modalVisible, setModalVisible] = useState(false);
 
@@ -127,6 +141,31 @@ export default function DetailsWaterSourceScreen() {
                 },
             ]
         );
+    };
+
+    const onSubmit = async (data: FormMonitoring) => {
+
+        const payload = {
+            ...data
+        };
+
+        setLoading(true);
+        try {
+            const res = await api.post('/water-sources/monitorings/store', payload, {
+                headers: { 'Content-Type': 'application/json' },
+            });
+            Alert.alert('Sucesso', `Novo monitoramento cadastrado!`);
+            router.replace('/(tabs)');
+        } catch (error) {
+            console.error(error);
+            if (isAxiosError(error) && error.response) {
+                Alert.alert('Erro', error.response.data.message);
+            } else {
+                Alert.alert('Erro', 'Não foi possível cadastrar o monitoramento.');
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (loading) {
@@ -327,8 +366,12 @@ export default function DetailsWaterSourceScreen() {
                                     Preencha os dados do novo monitoramento abaixo.
                                 </Text>
 
+                                <View>
+                                    <Input placeholder='Informe a descrição' name='description' control={control} label='Descrição' />
+                                </View>
+
                                 {/* Exemplo de botão no form */}
-                                <ButtonP title="Salvar" onPress={() => setModalVisible(false)} />
+                                <ButtonP title="Salvar" onPress={handleSubmit(onSubmit)} />
                             </ActionModal>
                         </View>
                     )}
@@ -480,52 +523,5 @@ const styles = StyleSheet.create({
         fontSize: 15,
         lineHeight: 22,
         marginBottom: 10,
-    },
-
-    // Modal
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'flex-end',
-    },
-    modalContainer: {
-        borderTopLeftRadius: 28,
-        borderTopRightRadius: 28,
-        paddingBottom: Platform.OS === 'ios' ? 40 : 20,
-    },
-    modalNotchContainer: {
-        alignItems: 'center',
-        paddingTop: 12,
-        paddingBottom: 4,
-    },
-    modalNotch: {
-        width: 40,
-        height: 5,
-        borderRadius: 3,
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 24,
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-    },
-    modalTitle: { fontSize: 20, fontWeight: '700' },
-    closeButton: { padding: 4 },
-    modalContent: { padding: 24 },
-    inputLabel: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
-    input: {
-        borderWidth: 1,
-        borderRadius: 10,
-        padding: 14,
-        fontSize: 16,
-        marginBottom: 20,
-    },
-    createButton: {
-        borderRadius: 12,
-        padding: 16,
-        alignItems: 'center',
-    },
-    createButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+    }
 });
