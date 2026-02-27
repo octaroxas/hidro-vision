@@ -6,7 +6,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { router } from '@/router/Router';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocalSearchParams } from 'expo-router';
-import { Droplets, FileText, Info, Map as MapIcon, Plus, User } from 'lucide-react-native';
+import { Droplets, FileText, Info, Plus, User } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -59,6 +59,7 @@ type WaterSource = {
 };
 
 import { FormMonitoring } from '@/@types/types';
+import MonitoringList from '@/components/monitoring-list';
 import { isAxiosError } from 'axios';
 import { useForm } from 'react-hook-form';
 import { z } from "zod";
@@ -339,14 +340,10 @@ export default function DetailsWaterSourceScreen() {
                     {/* ABA: HISTÓRICO */}
                     {tab === 'history' && (
                         <View style={styles.historyContainer}>
-                            <View style={[styles.emptyStateIcon, { backgroundColor: t('#F3F4F6', '#374151') }]}>
+                            {/* <View style={[styles.emptyStateIcon, { backgroundColor: t('#F3F4F6', '#374151') }]}>
                                 <MapIcon size={32} color={t('#9CA3AF', '#6B7280')} />
-                            </View>
-                            <Text style={[styles.emptyStateText, { color: t('#6B7280', '#9CA3AF') }]}>
-                                O histórico de monitoramento ainda não está disponível para este manancial.
-                            </Text>
-
-                            <View style={{ width: '100%', marginTop: 20 }}>
+                            </View> */}
+                            <View style={{ width: '100%' }}>
                                 <ButtonP onPress={() => setModalVisible(true)}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                                         <Plus color={'white'} size={20} />
@@ -354,6 +351,8 @@ export default function DetailsWaterSourceScreen() {
                                     </View>
                                 </ButtonP>
                             </View>
+
+                            <MonitoringList waterSourceId={Number(id)} />
 
                             {/* MODAL MANTIDO COM ESTILIZAÇÃO ORIGINAL */}
                             <ActionModal
@@ -508,7 +507,7 @@ const styles = StyleSheet.create({
     // History Tab
     historyContainer: {
         alignItems: 'center',
-        padding: 32,
+        padding: 10,
     },
     emptyStateIcon: {
         width: 64,
