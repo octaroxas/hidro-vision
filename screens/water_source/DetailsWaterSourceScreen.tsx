@@ -1,24 +1,23 @@
 import api from '@/api/Axios';
 import ButtonP from '@/components/form/Button';
+import ActionModal from '@/components/ui/action-modal';
 import { useTheme } from '@/hooks/useTheme';
 import { router } from '@/router/Router';
 import { useLocalSearchParams } from 'expo-router';
-import { Droplets, FileText, Info, Map as MapIcon, Plus, User, X } from 'lucide-react-native';
+import { Droplets, FileText, Info, Map as MapIcon, Plus, User } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
     Dimensions,
     Image,
-    KeyboardAvoidingView,
     Linking,
-    Modal,
     Platform,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import MapView, { LatLng, Marker, Polygon } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -318,51 +317,19 @@ export default function DetailsWaterSourceScreen() {
                             </View>
 
                             {/* MODAL MANTIDO COM ESTILIZAÇÃO ORIGINAL */}
-                            <Modal
+                            <ActionModal
+                                title="Registrar Monitoramento"
                                 visible={modalVisible}
-                                animationType="slide"
-                                transparent
-                                onRequestClose={() => setModalVisible(false)}
+                                onClose={() => setModalVisible(false)}
                             >
-                                <KeyboardAvoidingView
-                                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                                    style={styles.modalOverlay}
-                                >
-                                    <View
-                                        style={[
-                                            styles.modalContainer,
-                                            { backgroundColor: t('#FFFFFF', '#1F2937') },
-                                        ]}
-                                    >
-                                        {/* Pequeno indicador de arraste (notch) para modals modernos */}
-                                        <View style={styles.modalNotchContainer}>
-                                            <View style={[styles.modalNotch, { backgroundColor: t('#E5E7EB', '#4B5563') }]} />
-                                        </View>
+                                {/* Tudo o que você colocar aqui dentro aparecerá no modal */}
+                                <Text style={{ color: t('#6B7280', '#9CA3AF'), marginBottom: 16 }}>
+                                    Preencha os dados do novo monitoramento abaixo.
+                                </Text>
 
-                                        <View
-                                            style={[
-                                                styles.modalHeader,
-                                                { borderBottomColor: t('#E5E7EB', '#374151') },
-                                            ]}
-                                        >
-                                            <Text style={[styles.modalTitle, { color: t('#1F2937', '#F9FAFB') }]}>
-                                                Registrar Monitoramento
-                                            </Text>
-                                            <TouchableOpacity
-                                                onPress={() => setModalVisible(false)}
-                                                style={styles.closeButton}
-                                            >
-                                                <X size={24} color={t('#6B7280', '#9CA3AF')} />
-                                            </TouchableOpacity>
-                                        </View>
-
-                                        {/* Espaço reservado para o form mantendo os estilos base */}
-                                        <View style={styles.modalContent}>
-                                            {/* Formulário virá aqui */}
-                                        </View>
-                                    </View>
-                                </KeyboardAvoidingView>
-                            </Modal>
+                                {/* Exemplo de botão no form */}
+                                <ButtonP title="Salvar" onPress={() => setModalVisible(false)} />
+                            </ActionModal>
                         </View>
                     )}
                 </View>
