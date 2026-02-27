@@ -116,7 +116,7 @@ export default function MonitoringList({ waterSourceId }: MonitoringListProps) {
                     {/* Corpo do Card (Descrição) */}
                     <View style={styles.cardBody}>
                         <Text style={[styles.descriptionLabel, { color: t('#6B7280', '#9CA3AF') }]}>
-                            Descrição da análise
+                            Descrição inicial
                         </Text>
                         <Text style={[styles.descriptionText, { color: t('#111827', '#E5E7EB') }]}>
                             {item.description}
