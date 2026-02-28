@@ -2,6 +2,7 @@ import api from '@/api/Axios';
 import ButtonP from '@/components/form/Button'; // <-- Importado o botão customizado
 import ActionModal from '@/components/ui/action-modal'; // <-- Importado o modal reutilizável
 import { useTheme } from '@/hooks/useTheme';
+import { router } from '@/router/Router';
 import { Calendar, ClipboardList, Trash2, User } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -116,7 +117,8 @@ export default function MonitoringList({ waterSourceId }: MonitoringListProps) {
     return (
         <View style={styles.container}>
             {monitorings.map((item) => (
-                <View
+                <TouchableOpacity
+                    onPress={() => router.push(`/monitorings/details?id=${item.id}`)}
                     key={item.id}
                     style={[
                         styles.card,
@@ -162,7 +164,7 @@ export default function MonitoringList({ waterSourceId }: MonitoringListProps) {
                             {item.description}
                         </Text>
                     </View>
-                </View>
+                </TouchableOpacity>
             ))}
 
             {/* Modal de Exclusão injetado ao final da lista */}
