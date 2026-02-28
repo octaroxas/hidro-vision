@@ -10,12 +10,12 @@ import { isAxiosError } from "axios";
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/next';
 import { StatusBar } from "expo-status-bar";
-import { Droplets, MapPin, Trash2, Upload } from "lucide-react-native";
-import React, { useCallback, useEffect, useState } from "react";
+import { AlertCircle, CheckCircle, Droplets, MapPin, Trash2, Upload } from "lucide-react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from 'react-hook-form';
 import {
     ActivityIndicator,
-    Alert,
+    Animated,
     Dimensions,
     KeyboardAvoidingView,
     Platform,
@@ -67,6 +67,20 @@ export default function CreateWaterSourceScreen() {
     const [mapCoordinates, setMapCoordinates] = useState<LatLng[]>([]);
     const [waterSources, setWaterSources] = useState<WaterSource[]>();
 
+    // === SISTEMA DE TOAST CUSTOMIZADO ===
+    const slideAnim = useRef(new Animated.Value(-100)).current; // Começa fora da tela (topo)
+    const [toastConfig, setToastConfig] = useState({ message: '', type: 'success' as 'success' | 'error' });
+
+    const showToast = useCallback((message: string, type: 'success' | 'error') => {
+        setToastConfig({ message, type });
+        Animated.sequence([
+            Animated.timing(slideAnim, { toValue: Platform.OS === 'ios' ? 60 : 40, duration: 300, useNativeDriver: true }),
+            Animated.delay(2500),
+            Animated.timing(slideAnim, { toValue: -150, duration: 300, useNativeDriver: true })
+        ]).start();
+    }, [slideAnim]);
+    // ===================================
+
     const sanitazeCoord = useCallback((coord: number) => {
         let [num, dig] = coord.toString().split('.');
         dig = dig?.slice(0, 8) || "0";
@@ -93,6 +107,7 @@ export default function CreateWaterSourceScreen() {
                 setWaterClasses(classesRes.data.data);
             } catch (error) {
                 console.error('Erro ao buscar os dados:', error);
+                showToast('Erro ao carregar dados iniciais.', 'error');
             }
         }
         getWaterSources();
@@ -112,7 +127,6 @@ export default function CreateWaterSourceScreen() {
         });
     };
 
-    // Função auxiliar para UX: Limpar pontos do mapa
     const handleClearMap = () => {
         setMapCoordinates([]);
     };
@@ -137,21 +151,21 @@ export default function CreateWaterSourceScreen() {
             });
 
             if (parsedCoords.length < 3) {
-                Alert.alert('Atenção', 'O arquivo precisa conter pelo menos 3 coordenadas válidas.');
+                showToast('O arquivo precisa ter pelo menos 3 coordenadas.', 'error');
                 return;
             }
 
             setMapCoordinates(parsedCoords);
-            Alert.alert('Sucesso', `${parsedCoords.length} coordenadas importadas!`);
+            showToast(`${parsedCoords.length} coordenadas importadas!`, 'success');
         } catch (err: any) {
             console.error('Erro ao importar CSV:', err);
-            Alert.alert('Erro', 'Não foi possível importar o arquivo. Verifique o formato CSV.');
+            showToast('Falha ao ler CSV. Verifique o formato.', 'error');
         }
     };
 
     const onSubmit = async (data: FormWaterSource) => {
         if (mapCoordinates.length < 3) {
-            Alert.alert('Atenção', 'Marque no mínimo 3 pontos no mapa para delimitar o manancial!');
+            showToast('Marque no mínimo 3 pontos no mapa!', 'error');
             return;
         }
 
@@ -168,21 +182,26 @@ export default function CreateWaterSourceScreen() {
             const res = await api.post('/water-sources/store', payload, {
                 headers: { 'Content-Type': 'application/json' },
             });
-            Alert.alert('Sucesso', `${res.data.data.name} cadastrado!`);
-            router.replace('/(tabs)');
+
+            showToast(`${res.data.data.name} cadastrado com sucesso!`, 'success');
+
+            // Aguarda 2 segundos para o usuário ver o Toast de sucesso antes de navegar
+            setTimeout(() => {
+                router.replace('/(tabs)');
+            }, 2000);
+
         } catch (error) {
+            setLoading(false); // Só tira o loading se der erro. Se der sucesso, mantém a tela travada até navegar.
             console.error(error);
             if (isAxiosError(error) && error.response) {
-                Alert.alert('Erro', error.response.data.message);
+                showToast(error.response.data.message || 'Erro ao cadastrar manancial.', 'error');
             } else {
-                Alert.alert('Erro', 'Não foi possível cadastrar o manancial.');
+                showToast('Não foi possível conectar ao servidor.', 'error');
             }
-        } finally {
-            setLoading(false);
         }
     };
 
-    if (loading) {
+    if (loading && !toastConfig.message.includes('sucesso')) {
         return (
             <View style={[styles.center, { backgroundColor: t('#F9FAFB', '#111827') }]}>
                 <ActivityIndicator size="large" color={t('#2F80ED', '#60A5FA')} />
@@ -197,13 +216,35 @@ export default function CreateWaterSourceScreen() {
         <SafeAreaView style={[styles.safeArea, { backgroundColor: t('#F9FAFB', '#111827') }]} edges={['top']}>
             <StatusBar style={isDark ? "light" : "dark"} backgroundColor={t('#F9FAFB', '#111827')} />
 
+            {/* COMPONENTE DO TOAST ANIMADO */}
+            <Animated.View style={[
+                styles.toastContainer,
+                {
+                    transform: [{ translateY: slideAnim }],
+                    backgroundColor: toastConfig.type === 'success' ? t('#ECFDF5', '#022C22') : t('#FEF2F2', '#450A0A'),
+                    borderColor: toastConfig.type === 'success' ? t('#10B981', '#059669') : t('#EF4444', '#DC2626'),
+                }
+            ]}>
+                {toastConfig.type === 'success' ? (
+                    <CheckCircle color={t('#10B981', '#34D399')} size={24} />
+                ) : (
+                    <AlertCircle color={t('#EF4444', '#F87171')} size={24} />
+                )}
+                <Text style={[
+                    styles.toastText,
+                    { color: toastConfig.type === 'success' ? t('#064E3B', '#D1FAE5') : t('#7F1D1D', '#FEE2E2') }
+                ]}>
+                    {toastConfig.message}
+                </Text>
+            </Animated.View>
+
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
                 <ScrollView
                     contentContainerStyle={styles.scrollContent}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Cabeçalho Refinado */}
+                    {/* Cabeçalho */}
                     <View style={styles.header}>
                         <View style={[styles.iconCircle, { backgroundColor: t('#E0E7FF', 'rgba(96,165,250,0.15)') }]}>
                             <Droplets size={32} color={t('#2F80ED', '#60A5FA')} />
@@ -283,12 +324,9 @@ export default function CreateWaterSourceScreen() {
                         />
                     </View>
 
-                    {/* CARD 2: DELIMITAÇÃO NO MAPA (Refinado para Expansão Horizontal) */}
+                    {/* CARD 2: DELIMITAÇÃO NO MAPA */}
                     <Text style={[styles.sectionTitle, { color: t('#4B5563', '#9CA3AF') }]}>Delimitação Geográfica</Text>
-                    {/* Alterado para styles.mapCard (padding horizontal 0) */}
                     <View style={[styles.mapCard, { backgroundColor: t('#FFFFFF', '#1E293B'), borderColor: t('#E5E7EB', '#374151') }]}>
-
-                        {/* Header do Mapa com Recuo Lateral (já que o card não tem) */}
                         <View style={styles.mapActionsHeader}>
                             <View style={styles.mapInstruction}>
                                 <MapPin size={16} color={t('#6B7280', '#9CA3AF')} />
@@ -305,7 +343,6 @@ export default function CreateWaterSourceScreen() {
                             )}
                         </View>
 
-                        {/* Wrapper do Mapa ocupando toda a largura interna do Card */}
                         <View style={styles.mapWrapperBleed}>
                             <MapView
                                 provider={PROVIDER_GOOGLE}
@@ -315,7 +352,6 @@ export default function CreateWaterSourceScreen() {
                                 zoomEnabled
                                 zoomTapEnabled
                             >
-                                {/* Mananciais Existentes */}
                                 {waterSources?.map((marker) => (
                                     <Polygon
                                         key={marker.id}
@@ -326,7 +362,6 @@ export default function CreateWaterSourceScreen() {
                                     />
                                 ))}
 
-                                {/* Novo Manancial Sendo Marcado */}
                                 {mapCoordinates.map((marker, index) => (
                                     <Marker
                                         key={index}
@@ -348,7 +383,6 @@ export default function CreateWaterSourceScreen() {
                             </MapView>
                         </View>
 
-                        {/* Botão Importar CSV com Recuo Lateral (dentro do card sem padding) */}
                         <TouchableOpacity
                             onPress={handleImportCSV}
                             style={[styles.importButtonBleed, { backgroundColor: t('#F0F9FF', 'rgba(56,189,248,0.1)') }]}
@@ -361,19 +395,20 @@ export default function CreateWaterSourceScreen() {
                         </TouchableOpacity>
                     </View>
 
-                    {/* Botões de Ação Finais */}
+                    {/* Botões Finais */}
                     <View style={styles.buttonsContainer}>
                         <View style={{ flex: 1 }}>
                             <ButtonP
-                                title="Salvar Rascunho"
+                                title="Cancelar"
                                 variant="outline"
-                                onPress={() => Alert.alert('Aviso', 'Funcionalidade em desenvolvimento')}
+                                onPress={() => router.back()}
                             />
                         </View>
                         <View style={{ flex: 2 }}>
                             <ButtonP
                                 title="Cadastrar Manancial"
                                 onPress={handleSubmit(onSubmit)}
+                                disabled={loading}
                             />
                         </View>
                     </View>
@@ -387,100 +422,65 @@ export default function CreateWaterSourceScreen() {
 const styles = StyleSheet.create({
     safeArea: { flex: 1 },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    // Reduzido padding lateral geral de 20 para 16 para uma UI menos apertada
     scrollContent: { flexGrow: 1, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 40 },
+
+    // Toast Animado
+    toastContainer: {
+        position: 'absolute',
+        top: 0, // A animação cuida de trazer ele para baixo
+        left: 16,
+        right: 16,
+        zIndex: 9999,
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        borderRadius: 16,
+        borderWidth: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+        elevation: 10,
+    },
+    toastText: {
+        marginLeft: 12,
+        fontSize: 15,
+        fontWeight: '600',
+        flex: 1,
+    },
 
     // Header
     header: { alignItems: 'center', marginBottom: 24, marginTop: 12 },
-    iconCircle: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 16,
-    },
+    iconCircle: { width: 64, height: 64, borderRadius: 32, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
     appTitle: { fontSize: 24, fontWeight: '800', textAlign: 'center', marginBottom: 6 },
     subtitle: { fontSize: 14, textAlign: 'center' },
 
     // Sections & Cards
     sectionTitle: { fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, marginLeft: 4 },
-    // Card padrão (usado para inputs) mantém padding interno
-    card: {
-        borderRadius: 20,
-        padding: 20,
-        borderWidth: 1,
-        marginBottom: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-    // Card específico para o mapa (padding horizontal zerado para o mapa expandir)
-    mapCard: {
-        borderRadius: 20,
-        paddingVertical: 20,
-        borderWidth: 1,
-        marginBottom: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
-        overflow: 'hidden', // Garante que o mapa respeite o border radius do card
-    },
+    card: { borderRadius: 20, padding: 20, borderWidth: 1, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+    mapCard: { borderRadius: 20, paddingVertical: 20, borderWidth: 1, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2, overflow: 'hidden' },
 
     // Formulário e Picker
     label: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
     inputGroup: { marginBottom: 16 },
-    pickerWrapper: {
-        borderWidth: 1,
-        borderRadius: 12,
-        overflow: 'hidden',
-        height: 52,
-        justifyContent: 'center',
-    },
+    pickerWrapper: { borderWidth: 1, borderRadius: 12, overflow: 'hidden', height: 52, justifyContent: 'center' },
     picker: { width: '100%', height: 50 },
     inputError: { borderColor: '#EF4444', borderWidth: 1.5 },
     errorText: { color: '#EF4444', marginTop: 4, fontSize: 12, fontWeight: '500' },
 
     // Mapa e Ações
-    // Adicionado padding horizontal aqui pois o card pai não tem mais
     mapActionsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 16 },
     mapInstruction: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     instructionText: { fontSize: 13, fontWeight: '500' },
     clearMapButton: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4, paddingHorizontal: 8, borderRadius: 6, backgroundColor: 'rgba(239, 68, 68, 0.1)' },
     clearMapText: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
+    mapWrapperBleed: { borderWidth: 1, borderColor: 'transparent' },
+    map: { width: '100%', height: Dimensions.get('window').height * 0.50 },
 
-    // Wrapper ocupando toda a largura interna do Card (blooming effect)
-    mapWrapperBleed: {
-        borderWidth: 1,
-        borderColor: 'transparent',
-    },
-    map: {
-        width: '100%',
-        height: Dimensions.get('window').height * 0.50, // Mantido 50% da altura
-    },
-
-    // Import CSV dentro do card sem padding lateral
-    importButtonBleed: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        borderRadius: 12,
-        padding: 14,
-        marginTop: 16,
-        marginHorizontal: 16, // Adicionado margem lateral para não encostar na borda do card
-    },
+    // Import CSV
+    importButtonBleed: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, padding: 14, marginTop: 16, marginHorizontal: 16 },
     importText: { fontSize: 14, fontWeight: '600' },
 
     // Botões Bottom
-    buttonsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        gap: 12,
-        marginTop: 8,
-    },
+    buttonsContainer: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginTop: 8 },
 });
