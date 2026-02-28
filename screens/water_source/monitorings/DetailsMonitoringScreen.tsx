@@ -23,10 +23,10 @@ type MonitoringDetail = {
     description: string;
     user: MonitoringUser;
     water_source: WaterSource;
-    created_at: string; // Ex: "2025-12-02 18:07:01"
+    created_at: string;
 };
 
-// --- Dados Fake para as novas seções de parâmetros ---
+// --- Dados Fake para as seções de parâmetros ---
 const fakeFisicoQuimicos = [
     { id: 1, name: 'pH', value: '7.2', unit: '', status: 'Normal', icon: TestTube },
     { id: 2, name: 'Temperatura', value: '24.5', unit: '°C', status: 'Normal', icon: Thermometer },
@@ -47,7 +47,6 @@ export default function DetailsMonitoringScreen() {
 
     const [monitoring, setMonitoring] = useState<MonitoringDetail>();
     const [loading, setLoading] = useState(true);
-    // Estado para controlar a aba selecionada
     const [tab, setTab] = useState<'info' | 'analyses'>('info');
 
     useEffect(() => {
@@ -147,56 +146,57 @@ export default function DetailsMonitoringScreen() {
                     ))}
                 </View>
 
-                {/* ABA: INFORMAÇÕES (O código que você enviou originalmente) */}
+                {/* ABA: INFORMAÇÕES GERAIS (Layout Compacto) */}
                 {tab === 'info' && (
-                    <View style={[styles.card, { backgroundColor: t('#FFFFFF', '#1E293B'), borderColor: t('#E5E7EB', '#374151') }]}>
-                        {/* Linha: Manancial */}
-                        <View style={[styles.infoRow, { borderBottomColor: t('#F3F4F6', '#374151') }]}>
-                            <View style={[styles.infoIconWrapper, { backgroundColor: t('#F0F9FF', 'rgba(56,189,248,0.1)') }]}>
-                                <Droplet size={20} color={t('#0284C7', '#38BDF8')} />
-                            </View>
-                            <View style={styles.infoTextWrapper}>
-                                <Text style={[styles.label, { color: t('#6B7280', '#9CA3AF') }]}>Manancial</Text>
-                                <Text style={[styles.info, { color: t('#111827', '#F9FAFB') }]}>
+                    <View style={[styles.compactCard, { backgroundColor: t('#FFFFFF', '#1E293B'), borderColor: t('#E5E7EB', '#374151') }]}>
+
+                        {/* Linha 1: Manancial e Usuário dividindo a tela */}
+                        <View style={[styles.compactRow, { borderBottomColor: t('#F3F4F6', '#374151') }]}>
+                            <View style={styles.compactCol}>
+                                <View style={styles.compactLabelContainer}>
+                                    <Droplet size={14} color={t('#0284C7', '#38BDF8')} />
+                                    <Text style={[styles.compactLabel, { color: t('#6B7280', '#9CA3AF') }]}>Manancial</Text>
+                                </View>
+                                <Text style={[styles.compactValue, { color: t('#111827', '#F9FAFB') }]} numberOfLines={1}>
                                     {monitoring.water_source?.name || 'Não informado'}
                                 </Text>
                             </View>
-                        </View>
 
-                        {/* Linha: Cadastrado por */}
-                        <View style={[styles.infoRow, { borderBottomColor: t('#F3F4F6', '#374151') }]}>
-                            <View style={[styles.infoIconWrapper, { backgroundColor: t('#F3F4F6', 'rgba(156,163,175,0.1)') }]}>
-                                <User size={20} color={t('#4B5563', '#9CA3AF')} />
-                            </View>
-                            <View style={styles.infoTextWrapper}>
-                                <Text style={[styles.label, { color: t('#6B7280', '#9CA3AF') }]}>Registrado por</Text>
-                                <Text style={[styles.info, { color: t('#111827', '#F9FAFB') }]}>
+                            {/* Separador vertical sutil */}
+                            <View style={[styles.verticalDivider, { backgroundColor: t('#F3F4F6', '#374151') }]} />
+
+                            <View style={styles.compactCol}>
+                                <View style={styles.compactLabelContainer}>
+                                    <User size={14} color={t('#4B5563', '#9CA3AF')} />
+                                    <Text style={[styles.compactLabel, { color: t('#6B7280', '#9CA3AF') }]}>Registrado por</Text>
+                                </View>
+                                <Text style={[styles.compactValue, { color: t('#111827', '#F9FAFB') }]} numberOfLines={1}>
                                     {monitoring.user?.name}
                                 </Text>
                             </View>
                         </View>
 
-                        {/* Linha: Data de Registro */}
-                        <View style={[styles.infoRow, { borderBottomColor: t('#F3F4F6', '#374151') }]}>
-                            <View style={[styles.infoIconWrapper, { backgroundColor: t('#ECFDF5', 'rgba(52,211,153,0.1)') }]}>
-                                <Calendar size={20} color={t('#059669', '#34D399')} />
-                            </View>
-                            <View style={styles.infoTextWrapper}>
-                                <Text style={[styles.label, { color: t('#6B7280', '#9CA3AF') }]}>Data e Hora do Registro</Text>
-                                <Text style={[styles.info, { color: t('#111827', '#F9FAFB') }]}>
+                        {/* Linha 2: Data (Largura total) */}
+                        <View style={[styles.compactRow, { borderBottomColor: t('#F3F4F6', '#374151') }]}>
+                            <View style={styles.compactColFull}>
+                                <View style={styles.compactLabelContainer}>
+                                    <Calendar size={14} color={t('#059669', '#34D399')} />
+                                    <Text style={[styles.compactLabel, { color: t('#6B7280', '#9CA3AF') }]}>Data e Hora do Registro</Text>
+                                </View>
+                                <Text style={[styles.compactValue, { color: t('#111827', '#F9FAFB') }]}>
                                     {formatDateTime(monitoring.created_at)}
                                 </Text>
                             </View>
                         </View>
 
-                        {/* Linha: Descrição */}
-                        <View style={[styles.infoRow, { borderBottomWidth: 0, alignItems: 'flex-start' }]}>
-                            <View style={[styles.infoIconWrapper, { backgroundColor: t('#FEF3C7', 'rgba(251,191,36,0.1)') }]}>
-                                <AlignLeft size={20} color={t('#D97706', '#FBBF24')} />
-                            </View>
-                            <View style={styles.infoTextWrapper}>
-                                <Text style={[styles.label, { color: t('#6B7280', '#9CA3AF') }]}>Descrição da Análise</Text>
-                                <Text style={[styles.info, { color: t('#374151', '#D1D5DB'), lineHeight: 22 }]}>
+                        {/* Linha 3: Descrição */}
+                        <View style={[styles.compactRow, { borderBottomWidth: 0, paddingBottom: 0 }]}>
+                            <View style={styles.compactColFull}>
+                                <View style={styles.compactLabelContainer}>
+                                    <AlignLeft size={14} color={t('#D97706', '#FBBF24')} />
+                                    <Text style={[styles.compactLabel, { color: t('#6B7280', '#9CA3AF') }]}>Descrição da Análise</Text>
+                                </View>
+                                <Text style={[styles.compactDescription, { color: t('#4B5563', '#D1D5DB') }]}>
                                     {monitoring.description || 'Nenhuma descrição detalhada foi fornecida para este monitoramento.'}
                                 </Text>
                             </View>
@@ -204,10 +204,9 @@ export default function DetailsMonitoringScreen() {
                     </View>
                 )}
 
-                {/* ABA: ANÁLISES (Estrutura fake profissional que será alimentada pela API no futuro) */}
+                {/* ABA: ANÁLISES (Estrutura Grid) */}
                 {tab === 'analyses' && (
                     <View>
-                        {/* Físico-Químicos */}
                         <Text style={[styles.subSectionTitle, { color: t('#4B5563', '#9CA3AF') }]}>Físico-Químicos</Text>
                         <View style={styles.grid}>
                             {fakeFisicoQuimicos.map((param) => (
@@ -231,7 +230,6 @@ export default function DetailsMonitoringScreen() {
                             ))}
                         </View>
 
-                        {/* Microbiológicos */}
                         <Text style={[styles.subSectionTitle, { color: t('#4B5563', '#9CA3AF'), marginTop: 8 }]}>Microbiológicos</Text>
                         <View style={styles.grid}>
                             {fakeMicrobiologicos.map((param) => (
@@ -264,121 +262,69 @@ const styles = StyleSheet.create({
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     scrollContent: { padding: 20, paddingBottom: 40 },
 
-    // Header
-    header: {
-        alignItems: 'center',
-        marginBottom: 24,
-        marginTop: 12,
-    },
-    iconCircle: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 16,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: '800',
-        textAlign: 'center',
-        marginBottom: 6,
-    },
-    subtitle: {
-        fontSize: 14,
-        fontWeight: '500',
-    },
+    header: { alignItems: 'center', marginBottom: 24, marginTop: 12 },
+    iconCircle: { width: 64, height: 64, borderRadius: 32, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+    title: { fontSize: 24, fontWeight: '800', textAlign: 'center', marginBottom: 6 },
+    subtitle: { fontSize: 14, fontWeight: '500' },
 
-    // Tabs
-    tabContainer: {
-        flexDirection: 'row',
-        borderRadius: 12,
-        marginBottom: 24,
-        padding: 4,
-    },
-    tab: {
-        flex: 1,
-        alignItems: 'center',
-        paddingVertical: 12,
-        borderRadius: 8,
-    },
-    tabActiveShadow: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-    },
+    tabContainer: { flexDirection: 'row', borderRadius: 12, marginBottom: 24, padding: 4 },
+    tab: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 8 },
+    tabActiveShadow: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
 
-    // Card de Conteúdo Principal
-    card: {
-        borderRadius: 20,
+    // NOVOS ESTILOS PARA O LAYOUT COMPACTO
+    compactCard: {
+        borderRadius: 16,
         borderWidth: 1,
-        overflow: 'hidden',
-        paddingHorizontal: 20,
-        paddingVertical: 8,
+        padding: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
-        shadowRadius: 8,
+        shadowRadius: 6,
         elevation: 2,
     },
-    infoRow: {
+    compactRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 16,
+        paddingVertical: 12,
         borderBottomWidth: 1,
     },
-    infoIconWrapper: {
-        width: 44,
-        height: 44,
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 16,
-    },
-    infoTextWrapper: {
+    compactCol: {
         flex: 1,
-        justifyContent: 'center'
+        justifyContent: 'center',
     },
-    label: {
+    compactColFull: {
+        width: '100%',
+        justifyContent: 'center',
+    },
+    verticalDivider: {
+        width: 1,
+        marginHorizontal: 16,
+    },
+    compactLabelContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 4,
+        gap: 6,
+    },
+    compactLabel: {
         fontSize: 12,
         fontWeight: '600',
         textTransform: 'uppercase',
         letterSpacing: 0.5,
-        marginBottom: 4,
     },
-    info: {
-        fontSize: 16,
-        fontWeight: '500',
+    compactValue: {
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    compactDescription: {
+        fontSize: 14,
+        lineHeight: 22,
+        marginTop: 2,
     },
 
     // Estilos da aba de Análises (Grid)
-    subSectionTitle: {
-        fontSize: 14,
-        fontWeight: '700',
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-        marginBottom: 12,
-        marginLeft: 4
-    },
-    grid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between'
-    },
-    paramCard: {
-        width: '48%',
-        borderRadius: 16,
-        borderWidth: 1,
-        padding: 16,
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 1,
-    },
+    subSectionTitle: { fontSize: 14, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12, marginLeft: 4 },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+    paramCard: { width: '48%', borderRadius: 16, borderWidth: 1, padding: 16, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
     paramHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
     paramStatus: { fontSize: 12, fontWeight: '700' },
     paramName: { fontSize: 13, fontWeight: '600', marginBottom: 4 },
