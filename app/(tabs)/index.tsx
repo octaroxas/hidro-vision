@@ -1,7 +1,7 @@
 import api from '@/api/Axios';
 import { useTheme } from '@/hooks/useTheme';
 import { router } from '@/router/Router';
-import { Droplets, MapPin, SearchX, User } from 'lucide-react-native';
+import { Droplets, SearchX, User } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -72,14 +72,7 @@ export default function HomeRoute() {
   };
 
   const renderItem = ({ item }: { item: WaterSource }) => {
-    // Usando o placeholder caso a foto não exista
     const imageUri = item.photo_url ?? 'https://conceitos.com/wp-content/uploads/ecologia/manancial.jpg';
-
-    // Tratamento seguro para as coordenadas
-    const hasCoordinates = item.coordinates && item.coordinates.length > 0;
-    const locationText = hasCoordinates
-      ? `${Number(item.coordinates.latitude).toFixed(4)}, ${Number(item.coordinates.longitude).toFixed(4)}`
-      : 'Coordenadas não informadas';
 
     return (
       <TouchableOpacity
@@ -94,11 +87,9 @@ export default function HomeRoute() {
           },
         ]}
       >
-        {/* Capa do Card (Imagem) */}
         <View style={styles.imageContainer}>
           <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" />
 
-          {/* Badge flutuante em cima da imagem */}
           <View style={[styles.floatingBadge, { backgroundColor: t('rgba(255,255,255,0.9)', 'rgba(31,41,55,0.9)') }]}>
             <Droplets size={12} color={t('#2F80ED', '#60A5FA')} style={{ marginRight: 4 }} />
             <Text style={[styles.floatingBadgeText, { color: t('#2F80ED', '#60A5FA') }]}>
@@ -107,7 +98,6 @@ export default function HomeRoute() {
           </View>
         </View>
 
-        {/* Corpo do card */}
         <View style={styles.cardBody}>
           <View style={styles.titleRow}>
             <Text style={[styles.cardTitle, { color: t('#111827', '#F9FAFB') }]} numberOfLines={1}>
@@ -124,14 +114,7 @@ export default function HomeRoute() {
 
           <View style={[styles.divider, { backgroundColor: t('#F3F4F6', '#374151') }]} />
 
-          {/* Footer do Card */}
           <View style={styles.infoFooter}>
-            <View style={styles.infoRow}>
-              <MapPin size={14} color={t('#6B7280', '#9CA3AF')} />
-              <Text style={[styles.infoText, { color: t('#6B7280', '#9CA3AF') }]} numberOfLines={1}>
-                {locationText}
-              </Text>
-            </View>
             <View style={styles.infoRow}>
               <User size={14} color={t('#6B7280', '#9CA3AF')} />
               <Text style={[styles.infoText, { color: t('#6B7280', '#9CA3AF') }]} numberOfLines={1}>
@@ -147,7 +130,6 @@ export default function HomeRoute() {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: t('#F9FAFB', '#111827') }]} edges={['top']}>
       <View style={styles.container}>
-        {/* Header */}
         <View style={[styles.header, { backgroundColor: t('#F9FAFB', '#111827') }]}>
           <View>
             <Text style={[styles.title, { color: t('#111827', '#F9FAFB') }]}>HidroVision</Text>
@@ -155,7 +137,6 @@ export default function HomeRoute() {
           </View>
         </View>
 
-        {/* Loading, Error ou Lista */}
         {loading ? (
           <View style={styles.center}>
             <ActivityIndicator color={t('#2F80ED', '#60A5FA')} size="large" />
@@ -223,11 +204,11 @@ const styles = StyleSheet.create({
   emptyIconCircle: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   emptyText: { fontSize: 16, fontWeight: '500' },
 
-  // Card Styles
+  // Card
   card: {
     borderWidth: 1,
     borderRadius: 20,
-    overflow: 'hidden', // Importante para a imagem não vazar das bordas arredondadas
+    overflow: 'hidden',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
@@ -237,7 +218,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 160,
     position: 'relative',
-    backgroundColor: '#E5E7EB', // Fundo caso a imagem demore a carregar
+    backgroundColor: '#E5E7EB',
   },
   image: {
     width: '100%',
