@@ -44,7 +44,7 @@ export default function WaterSourceCard({ item }: WaterSourceCardProps) {
                 <View style={[styles.floatingBadge, { backgroundColor: t('rgba(255,255,255,0.9)', 'rgba(31,41,55,0.9)') }]}>
                     <Droplets size={12} color={t('#2F80ED', '#60A5FA')} style={{ marginRight: 4 }} />
                     <Text style={[styles.floatingBadgeText, { color: t('#2F80ED', '#60A5FA') }]}>
-                        {item.water_class?.water_class ?? 'Indefinida'}
+                        Classe {item.water_class?.water_class ?? 'Indefinida'}
                     </Text>
                 </View>
             </View>
