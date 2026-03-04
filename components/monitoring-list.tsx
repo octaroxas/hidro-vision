@@ -76,7 +76,7 @@ export default function MonitoringList({ waterSourceId }: MonitoringListProps) {
 
         try {
             // TODO: Aqui você adiciona a chamada de deleção da sua API
-            // await api.delete(`/monitorings/${monitoringToDelete}`);
+            await api.delete(`/monitorings/${monitoringToDelete}`);
 
             // Atualiza a lista localmente para refletir a exclusão na hora
             setMonitorings((prev) => prev.filter((m) => m.id !== monitoringToDelete));
