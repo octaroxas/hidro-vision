@@ -152,7 +152,7 @@ export default function DetailsWaterSourceScreen() {
 
         setLoading(true);
         try {
-            const res = await api.post('/water-sources/monitorings/store', payload, {
+            const res = await api.post('/monitorings/store', payload, {
                 headers: { 'Content-Type': 'application/json' },
             });
             Alert.alert('Sucesso', `Novo monitoramento cadastrado!`);
