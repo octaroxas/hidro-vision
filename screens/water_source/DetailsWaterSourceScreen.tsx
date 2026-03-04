@@ -252,7 +252,7 @@ export default function DetailsWaterSourceScreen() {
                                 <View style={styles.infoTextWrapper}>
                                     <Text style={[styles.label, { color: t('#6B7280', '#9CA3AF') }]}>Classe hídrica</Text>
                                     <Text style={[styles.info, { color: t('#111827', '#F9FAFB') }]}>
-                                        {waterSource?.water_class?.water_class}
+                                        Classe {waterSource?.water_class?.water_class}
                                     </Text>
                                 </View>
                             </View>
