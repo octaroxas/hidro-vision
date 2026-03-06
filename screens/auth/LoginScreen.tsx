@@ -37,7 +37,7 @@ export default function LoginScreen() {
     const { control, handleSubmit, formState: { errors } } = useForm({ resolver: zodResolver(schema) })
     const { login, loading } = useAuth()
     useEffect(() => {
-        login({ email: 'octa.oca44@gmail.com', password: 'password' })
+        // login({ email: 'octa.oca44@gmail.com', password: 'password' })
     }, []);
 
     return (

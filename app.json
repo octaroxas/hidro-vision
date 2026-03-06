@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "test",
-    "slug": "test",
+    "name": "HidroVision",
+    "slug": "hidrovision",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -20,7 +20,12 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.octa.hidrovision"
+      "package": "com.octa.hidrovision",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDuoa9rvR6Jft2ss3LDX2A2viDFVx6V5SE"
+        }
+      }
     },
     "web": {
       "output": "static",
